@@ -7,29 +7,15 @@ let isFirstAudio = true;
 let currentChatId = "1";
 let rippleInterval = null;
 let lastUserMessage = null;
+let mediaRecorder = null;
+let stream = null;
+let audioBuffer = [];
+let lastSendTime = 0;
 
 const SAMPLE_RATE = 44100; // Murf output sample rate
 const CHANNELS = 1;
 const BITS_PER_SAMPLE = 16;
-
-const startBtn = document.getElementById("micBtn");
-const stopBtn = document.getElementById("stopListening");
-const status = document.getElementById("status");
-const transcription = document.getElementById("transcription");
-const chatHistory = document.getElementById("chatHistory");
-const spinner = document.querySelector(".spinner");
-const connectionStatus = document.getElementById("connectionStatus");
-const newChatBtn = document.getElementById("newChatBtn");
-const chatList = document.getElementById("chatList");
-const notification = document.getElementById("notification");
-const listeningModal = document.getElementById("listeningModal");
-const chatInput = document.getElementById("chatInput");
-const sendBtn = document.getElementById("sendBtn");
-const uploadForm = document.getElementById("uploadForm");
-const fileInput = document.getElementById("fileInput");
-const settingsBtn = document.getElementById("settingsBtn");
-
-// static/index.js
+const AUDIO_BUFFER_INTERVAL = 100; // ms
 
 // Color definitions
 const colorSchemes = {
@@ -72,14 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
   applyTheme(savedTheme, savedAccentColor);
 });
 
-// Navigation (handled by <a> tags in HTML, but added for settingsBtn)
-document.querySelector(".settings-btn").addEventListener("click", () => {
-  window.location.href = "/settings";
-});
-
-// Placeholder for other index.js functionality (e.g., WebSocket, chat, uploads)
-// Add your existing index.js code here for chat, upload, WebSocket, etc.
-
 // Initialize AudioContext
 function initAudioContext() {
   if (!audioContext) {
@@ -91,7 +69,6 @@ function initAudioContext() {
       audioContext.sampleRate
     );
   }
-  // Resume AudioContext if suspended
   if (audioContext.state === "suspended") {
     audioContext.resume().then(() => {
       console.log("AudioContext resumed");
@@ -196,7 +173,6 @@ function playNextAudio() {
 
 // Append user message to transcription
 function appendUserMessage(text, isFinal) {
-  // Remove previous user message if it exists
   if (lastUserMessage) {
     lastUserMessage.remove();
     lastUserMessage = null;
@@ -334,7 +310,7 @@ async function loadCurrentConversation() {
       history.forEach((entry) => {
         appendUserMessage(entry.user_query, true);
         appendAIMessage(entry.ai_response);
-        lastUserMessage = null; // Reset after each pair
+        lastUserMessage = null;
       });
     }
   } catch (error) {
@@ -357,9 +333,22 @@ function showNotification(message) {
 
 // Initialize WebSocket connection
 function connectWebSocket() {
-  ws = new WebSocket(
-    `ws://${window.location.host}/ws?chat_id=${currentChatId}`
-  );
+  if (!window.WebSocket) {
+    showNotification(
+      "Your browser does not support WebSockets. Please use Chrome or Firefox."
+    );
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showNotification(
+      "Your browser does not support microphone access. Please use Chrome or Firefox."
+    );
+    return;
+  }
+  const protocol = window.location.protocol === "https:" ? "wss://" : "ws://";
+  const wsUrl = `${protocol}${window.location.host}/ws?chat_id=${currentChatId}`;
+  console.log("Connecting to WebSocket:", wsUrl);
+  ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
     console.log("WebSocket opened");
@@ -429,7 +418,6 @@ function connectWebSocket() {
         console.warn("Invalid JSON message format:", jsonData);
       }
     } catch (e) {
-      // Handle legacy text messages
       const data = event.data;
       if (data === "Started transcription") {
         status.textContent = "Status: Transcribing 🎤";
@@ -477,16 +465,70 @@ function connectWebSocket() {
     status.textContent = "Status: Disconnected 🔌";
     spinner.style.display = "none";
     clearInterval(rippleInterval);
+    showNotification("WebSocket disconnected. Reconnecting... 🔌");
     setTimeout(connectWebSocket, 5000);
   };
 
-  ws.onerror = () => {
-    console.error("WebSocket error");
+  ws.onerror = (error) => {
+    console.error("WebSocket error:", error);
     connectionStatus.textContent = "Error connecting to server ❌";
     connectionStatus.classList.remove("connected");
     status.textContent = "Status: Error ❌";
     clearInterval(rippleInterval);
+    showNotification("WebSocket connection failed ❌");
   };
+}
+
+// Start recording
+async function startRecording() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showNotification(
+      "Your browser does not support microphone access. Please use Chrome or Firefox."
+    );
+    return;
+  }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream, {
+      mimeType: "audio/webm",
+      timeslice: AUDIO_BUFFER_INTERVAL,
+    });
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+        audioBuffer.push(event.data);
+        const currentTime = Date.now();
+        if (currentTime - lastSendTime >= AUDIO_BUFFER_INTERVAL) {
+          const blob = new Blob(audioBuffer, { type: "audio/webm" });
+          ws.send(blob);
+          audioBuffer = [];
+          lastSendTime = currentTime;
+        }
+      }
+    };
+    mediaRecorder.start(AUDIO_BUFFER_INTERVAL);
+    ws.send("start");
+    status.textContent = "Status: Transcribing 🎤";
+    listeningModal.style.display = "flex";
+  } catch (error) {
+    console.error("Error starting recording:", error);
+    showNotification("Failed to access microphone ❌");
+  }
+}
+
+// Stop recording
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    stream.getTracks().forEach((track) => track.stop());
+    if (audioBuffer.length > 0) {
+      const blob = new Blob(audioBuffer, { type: "audio/webm" });
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(blob);
+      }
+      audioBuffer = [];
+    }
+    ws.send("stop");
+  }
 }
 
 // Handle file upload
@@ -532,27 +574,38 @@ async function initApp() {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", () => {
-  // Start microphone
+  const startBtn = document.getElementById("micBtn");
+  const stopBtn = document.getElementById("stopListening");
+  const status = document.getElementById("status");
+  const transcription = document.getElementById("transcription");
+  const chatHistory = document.getElementById("chatHistory");
+  const spinner = document.querySelector(".spinner");
+  const connectionStatus = document.getElementById("connectionStatus");
+  const newChatBtn = document.getElementById("newChatBtn");
+  const chatList = document.getElementById("chatList");
+  const notification = document.getElementById("notification");
+  const listeningModal = document.getElementById("listeningModal");
+  const chatInput = document.getElementById("chatInput");
+  const sendBtn = document.getElementById("sendBtn");
+  const uploadForm = document.getElementById("uploadForm");
+  const fileInput = document.getElementById("fileInput");
+  const settingsBtn = document.getElementById("settingsBtn");
+
   startBtn.addEventListener("click", () => {
-    initAudioContext();
-    isFirstAudio = true;
-    lastUserMessage = null; // Reset user message
-    listeningModal.style.display = "flex";
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send("start");
+    if (mediaRecorder && mediaRecorder.state === "recording") {
+      stopRecording();
     } else {
-      showNotification("WebSocket not connected ❌");
+      initAudioContext();
+      isFirstAudio = true;
+      lastUserMessage = null;
+      startRecording();
     }
   });
 
-  // Stop microphone
   stopBtn.addEventListener("click", () => {
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send("stop");
-    }
+    stopRecording();
   });
 
-  // Send text query
   sendBtn.addEventListener("click", () => {
     const text = chatInput.value.trim();
     if (text && ws && ws.readyState === WebSocket.OPEN) {
@@ -565,14 +618,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Send text query on Enter key
   chatInput.addEventListener("keypress", (e) => {
     if (e.key === "Enter") {
       sendBtn.click();
     }
   });
 
-  // New chat
   newChatBtn.addEventListener("click", async () => {
     try {
       const res = await fetch("/new_chat", { method: "POST" });
@@ -592,11 +643,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Navigate to settings page
   settingsBtn.addEventListener("click", () => {
     window.location.href = "/settings";
   });
 
-  // Initialize app
   initApp();
 });

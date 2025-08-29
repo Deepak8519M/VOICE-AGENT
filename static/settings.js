@@ -1,5 +1,3 @@
-// static/settings.js
-
 const sidebarItems = document.querySelectorAll(".settings-sidebar li");
 const cards = document.querySelectorAll(".settings-card");
 const apiForm = document.getElementById("apiForm");
@@ -51,13 +49,61 @@ function applyTheme(theme, accentColor) {
   );
 }
 
+// Load saved settings from server on page load
+async function loadSettings() {
+  try {
+    const response = await fetch("/get_settings");
+    const settings = await response.json();
+    if (!settings.error) {
+      document.querySelector("select[name='voiceId']").value =
+        settings.voiceId || "en-IN-alia";
+      document.querySelector("input[name='playbackSpeed']").value =
+        settings.playbackSpeed || 1.0;
+      document.querySelector("select[name='conversationType']").value =
+        settings.conversationType || "casual";
+      document.querySelector("input[name='micSensitivity']").value =
+        settings.micSensitivity || 50;
+      document.querySelector("select[name='audioQuality']").value =
+        settings.audioQuality || "medium";
+      document.querySelector("input[name='autoSaveHistory']").checked =
+        settings.autoSaveHistory !== false;
+      document.querySelector("input[name='includeKnowledgeBase']").checked =
+        settings.includeKnowledgeBase !== false;
+      document.querySelector("input[name='enableSearch']").checked =
+        settings.enableSearch !== false;
+      document.querySelector("input[name='maxSearchResults']").value =
+        settings.maxSearchResults || 3;
+      document.querySelector("input[name='enableSound']").checked =
+        settings.enableSound !== false;
+      document.querySelector("input[name='notificationDuration']").value =
+        settings.notificationDuration || 4;
+      document.querySelector("select[name='theme']").value =
+        settings.theme || "dark";
+      document.querySelector("select[name='accentColor']").value =
+        settings.accentColor || "orange";
+      sliders.forEach((slider) => {
+        const valueSpan = slider.nextElementSibling;
+        valueSpan.textContent =
+          slider.name === "micSensitivity"
+            ? `${slider.value}%`
+            : `${slider.value}x`;
+      });
+      applyTheme(settings.theme || "dark", settings.accentColor || "orange");
+      localStorage.setItem("theme", settings.theme || "dark");
+      localStorage.setItem("accentColor", settings.accentColor || "orange");
+    } else {
+      console.error("Failed to load settings:", settings.error);
+      showNotification("Error loading settings.", true);
+    }
+  } catch (error) {
+    console.error("Error fetching settings:", error);
+    showNotification("Error loading settings.", true);
+  }
+}
+
 // Load saved settings on page load
 document.addEventListener("DOMContentLoaded", () => {
-  const savedTheme = localStorage.getItem("theme") || "dark";
-  const savedAccentColor = localStorage.getItem("accentColor") || "orange";
-  themeSelect.value = savedTheme;
-  accentColorSelect.value = savedAccentColor;
-  applyTheme(savedTheme, savedAccentColor);
+  loadSettings();
 });
 
 // Dynamic theme update
@@ -184,6 +230,7 @@ apiForm.addEventListener("submit", async (e) => {
     }
     setTimeout(() => (window.location.href = "/"), 2000);
   } catch (error) {
+    console.error("Error saving API keys:", error);
     showNotification("Error saving API keys. Falling back to .env keys.", true);
     setTimeout(() => (window.location.href = "/"), 2000);
   }
@@ -227,16 +274,17 @@ saveBtn.addEventListener("click", async () => {
     });
     const result = await response.json();
     if (result.error) {
+      console.error("Error saving settings:", result.error);
       showNotification(`Error saving settings: ${result.error}`, true);
     } else {
       showNotification("Settings saved successfully!");
-      // Save to localStorage
       localStorage.setItem("theme", settings.theme);
       localStorage.setItem("accentColor", settings.accentColor);
       applyTheme(settings.theme, settings.accentColor);
     }
     setTimeout(() => (window.location.href = "/app"), 2000);
   } catch (error) {
+    console.error("Error saving settings:", error);
     showNotification("Error saving settings.", true);
     setTimeout(() => (window.location.href = "/app"), 2000);
   }
@@ -257,26 +305,35 @@ resetBtn.addEventListener("click", async () => {
     });
     const result = await response.json();
     if (result.error) {
+      console.error("Error resetting settings:", result.error);
       showNotification(`Error resetting settings: ${result.error}`, true);
     } else {
       showNotification("Settings reset to defaults!");
-      settingsForm.querySelectorAll("input, select").forEach((input) => {
-        if (input.type === "checkbox")
-          input.checked =
-            input.name === "enableSound" ||
-            input.name === "autoSaveHistory" ||
-            input.name === "includeKnowledgeBase" ||
-            input.name === "enableSearch";
-        else if (input.type === "range")
-          input.value = input.name === "micSensitivity" ? "50" : "1.0";
-        else if (input.type === "number")
-          input.value = input.name === "notificationDuration" ? "4" : "3";
-        else if (input.type === "password" || input.type === "text")
-          input.value = "";
-        else if (input.tagName === "SELECT")
-          input.value = input.options[0].value;
+      // Explicitly set form values to defaults
+      document.querySelector("select[name='voiceId']").value = "en-IN-alia";
+      document.querySelector("input[name='playbackSpeed']").value = "1.0";
+      document.querySelector("select[name='conversationType']").value =
+        "casual";
+      document.querySelector("input[name='micSensitivity']").value = "50";
+      document.querySelector("select[name='audioQuality']").value = "medium";
+      document.querySelector("input[name='autoSaveHistory']").checked = true;
+      document.querySelector(
+        "input[name='includeKnowledgeBase']"
+      ).checked = true;
+      document.querySelector("input[name='enableSearch']").checked = true;
+      document.querySelector("input[name='maxSearchResults']").value = "3";
+      document.querySelector("input[name='enableSound']").checked = true;
+      document.querySelector("input[name='notificationDuration']").value = "4";
+      document.querySelector("select[name='theme']").value = "dark";
+      document.querySelector("select[name='accentColor']").value = "orange";
+      // Update API inputs
+      enableCustomKeys.checked = false;
+      apiInputs.forEach((input) => {
+        input.value = "";
+        input.disabled = true;
         input.classList.remove("error");
       });
+      // Update slider displays
       sliders.forEach((slider) => {
         const valueSpan = slider.nextElementSibling;
         valueSpan.textContent =
@@ -284,12 +341,15 @@ resetBtn.addEventListener("click", async () => {
             ? `${slider.value}%`
             : `${slider.value}x`;
       });
-      enableCustomKeys.dispatchEvent(new Event("change"));
+      // Apply theme
       applyTheme("dark", "orange");
       localStorage.setItem("theme", "dark");
       localStorage.setItem("accentColor", "orange");
+      // Reload settings to ensure sync
+      await loadSettings();
     }
   } catch (error) {
+    console.error("Error resetting settings:", error);
     showNotification("Error resetting settings.", true);
   }
 });
@@ -304,11 +364,13 @@ document.getElementById("clearHistory").addEventListener("click", async () => {
     });
     const result = await response.json();
     if (result.error) {
+      console.error("Error clearing chat history:", result.error);
       showNotification(`Error clearing chat history: ${result.error}`, true);
     } else {
       showNotification("Chat history cleared successfully!");
     }
   } catch (error) {
+    console.error("Error clearing chat history:", error);
     showNotification("Error clearing chat history.", true);
   }
 });
@@ -325,6 +387,7 @@ document
       });
       const result = await response.json();
       if (result.error) {
+        console.error("Error clearing knowledge base:", result.error);
         showNotification(
           `Error clearing knowledge base: ${result.error}`,
           true
@@ -333,6 +396,7 @@ document
         showNotification("Knowledge base cleared successfully!");
       }
     } catch (error) {
+      console.error("Error clearing knowledge base:", error);
       showNotification("Error clearing knowledge base.", true);
     }
   });
@@ -342,18 +406,20 @@ previewVoiceBtn.addEventListener("click", async () => {
   const voiceId = document.querySelector("select[name='voiceId']").value;
   const sampleText = "Hello! This is a sample of my voice.";
   try {
-    const response = await fetch("/ws", {
+    const response = await fetch("/ws?chat_id=1", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ command: `speak:${sampleText}`, voiceId }),
     });
     const result = await response.json();
     if (result.error) {
+      console.error("Error previewing voice:", result.error);
       showNotification(`Error previewing voice: ${result.error}`, true);
     } else {
       showNotification("Voice preview playing!");
     }
   } catch (error) {
+    console.error("Error previewing voice:", error);
     showNotification("Error previewing voice.", true);
   }
 });
