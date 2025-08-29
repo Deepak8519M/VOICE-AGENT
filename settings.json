@@ -1,5 +1,5 @@
 {
-  "voiceId": "en-IN-ananya",
+  "voiceId": "en-IN-alia",
   "playbackSpeed": 1,
   "conversationType": "casual",
   "micSensitivity": 50,
@@ -10,6 +10,6 @@
   "maxSearchResults": 3,
   "enableSound": true,
   "notificationDuration": 4,
-  "theme": "dark",
+  "theme": "light",
   "accentColor": "orange"
 }

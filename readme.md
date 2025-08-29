@@ -1,5 +1,18 @@
 # 🎙️ `AI Voice Agent – Day 25 | 30 Days of Voice Agents Challenge 🚀`
 
+
+
+python -m venv venv
+
+venv\Scripts\activate
+
+pip install fastapi==0.115.2 uvicorn==0.32.0 requests==2.32.3 python-dotenv==1.0.1 python-multipart==0.0.9 assemblyai murf google-generativeai
+
+uvicorn main:app --reload
+
+python -m http.server 5500
+
+
 Welcome to **Day 17 of my AI Voice Agent journey**, part of the #BuildWithMurf challenge! 🌟
 
 Today’s focus is on **real-time audio streaming and transcription** using **FastAPI, WebSockets, and AssemblyAI**. This feature allows users to **speak directly into their microphone** and receive **live transcription updates in the browser**. It’s a core step toward building **interactive, voice-powered AI assistants** that feel responsive and dynamic. 💬
