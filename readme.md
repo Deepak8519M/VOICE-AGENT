@@ -23,7 +23,6 @@ Built with **FastAPI, AssemblyAI, Google Gemini, Murf AI, and Tavily**, NovaFlow
 ---
 
 ## 📂 Folder Structure
-
 ```
 
 VOICEAGENT/
@@ -73,7 +72,7 @@ VOICEAGENT/
    ```bash
    git clone <your-repository-url>
    cd VOICEAGENT
-````
+```
 
 2. **Create and Activate Virtual Environment**
 
