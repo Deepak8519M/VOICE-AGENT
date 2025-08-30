@@ -7,16 +7,12 @@ let isFirstAudio = true;
 let currentChatId = "1";
 let rippleInterval = null;
 let lastUserMessage = null;
-let mediaRecorder = null;
 let stream = null;
-let audioBuffer = [];
-let lastSendTime = 0;
 let isRecording = false;
 
-const SAMPLE_RATE = 44100; // Murf output sample rate
+const SAMPLE_RATE = 16000; // AssemblyAI requires 16 kHz
 const CHANNELS = 1;
-const BITS_PER_SAMPLE = 16;
-const AUDIO_BUFFER_INTERVAL = 100; // ms
+const AUDIO_BUFFER_INTERVAL = 1000; // 1-second chunks
 
 // Color definitions
 const colorSchemes = {
@@ -91,6 +87,17 @@ function base64ToArrayBuffer(base64) {
     console.error("Error decoding base64:", error);
     return null;
   }
+}
+
+// Convert Float32Array to 16-bit PCM
+function floatTo16BitPCM(float32Array) {
+  const buffer = new ArrayBuffer(float32Array.length * 2);
+  const view = new DataView(buffer);
+  for (let i = 0; i < float32Array.length; i++) {
+    const s = Math.max(-1, Math.min(1, float32Array[i]));
+    view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+  }
+  return buffer;
 }
 
 // Queue audio chunk
@@ -397,8 +404,7 @@ function connectWebSocket() {
       } else if (jsonData.type === "error" && jsonData.data) {
         showNotification(`Error: ${jsonData.data}`);
         status.textContent = `Error: ${jsonData.data}`;
-        const ripples = document.querySelectorAll(".ripple");
-        ripples.forEach((ripple) => ripple.classList.remove("active"));
+        stopRecording();
       } else if (jsonData.type === "info" && jsonData.data) {
         showNotification(jsonData.data);
       } else if (jsonData.type === "turn_ended") {
@@ -417,6 +423,9 @@ function connectWebSocket() {
         );
         initAudioContext();
         await queueAudio(jsonData.data, jsonData.is_final);
+      } else if (jsonData.type === "sound_alert" && jsonData.data) {
+        // Handle sound alerts if needed
+        console.log("Sound alert:", jsonData.data);
       } else {
         console.warn("Invalid JSON message format:", jsonData);
       }
@@ -472,6 +481,7 @@ function connectWebSocket() {
     status.textContent = "Status: Disconnected 🔌";
     spinner.style.display = "none";
     clearInterval(rippleInterval);
+    stopRecording();
     showNotification("WebSocket disconnected. Reconnecting... 🔌");
     setTimeout(connectWebSocket, 5000);
   };
@@ -482,6 +492,7 @@ function connectWebSocket() {
     connectionStatus.classList.remove("connected");
     status.textContent = "Status: Error ❌";
     clearInterval(rippleInterval);
+    stopRecording();
     showNotification("WebSocket connection failed ❌");
   };
 }
@@ -496,27 +507,35 @@ async function startRecording() {
   }
   try {
     stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    mediaRecorder = new MediaRecorder(stream, {
-      mimeType: "audio/webm",
-      timeslice: AUDIO_BUFFER_INTERVAL,
-    });
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0 && ws.readyState === WebSocket.OPEN) {
-        audioBuffer.push(event.data);
-        const currentTime = Date.now();
-        if (currentTime - lastSendTime >= AUDIO_BUFFER_INTERVAL) {
-          const blob = new Blob(audioBuffer, { type: "audio/webm" });
-          ws.send(blob);
-          audioBuffer = [];
-          lastSendTime = currentTime;
-        }
+    initAudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    const processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+    source.connect(processor);
+    processor.connect(audioContext.destination);
+
+    processor.onaudioprocess = (e) => {
+      if (isRecording && ws && ws.readyState === WebSocket.OPEN) {
+        const audioData = e.inputBuffer.getChannelData(0);
+        const pcmBuffer = floatTo16BitPCM(audioData);
+        ws.send(pcmBuffer);
+        console.log(`Sent audio chunk: ${pcmBuffer.byteLength} bytes`);
       }
     };
-    mediaRecorder.start(AUDIO_BUFFER_INTERVAL);
+
     ws.send("start");
     isRecording = true;
     status.textContent = "Status: Transcribing 🎤";
     listeningModal.style.display = "flex";
+    rippleInterval = setInterval(() => {
+      const ripples = document.querySelectorAll(".ripple");
+      ripples.forEach((ripple) => {
+        ripple.classList.remove("active");
+        setTimeout(() => {
+          if (isRecording) ripple.classList.add("active");
+        }, 50);
+      });
+    }, 1500);
   } catch (error) {
     console.error("Error starting recording:", error);
     showNotification("Failed to access microphone ❌");
@@ -525,18 +544,14 @@ async function startRecording() {
 
 // Stop recording
 function stopRecording() {
-  if (mediaRecorder && mediaRecorder.state === "recording") {
-    mediaRecorder.stop();
-    stream.getTracks().forEach((track) => track.stop());
-    if (audioBuffer.length > 0) {
-      const blob = new Blob(audioBuffer, { type: "audio/webm" });
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(blob);
-      }
-      audioBuffer = [];
-    }
-    ws.send("stop");
+  if (isRecording) {
     isRecording = false;
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send("stop");
+    }
     clearInterval(rippleInterval);
     rippleInterval = null;
     const ripples = document.querySelectorAll(".ripple");
@@ -551,7 +566,7 @@ function stopRecording() {
 }
 
 // Handle file upload
-uploadForm.addEventListener("submit", async (e) => {
+async function handleFileUpload(e) {
   e.preventDefault();
   const formData = new FormData(uploadForm);
   try {
@@ -567,7 +582,7 @@ uploadForm.addEventListener("submit", async (e) => {
     console.error("Error uploading file:", error);
     showNotification("Error uploading file ❌");
   }
-});
+}
 
 // Initialize app
 async function initApp() {
@@ -611,7 +626,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const settingsBtn = document.getElementById("settingsBtn");
 
   startBtn.addEventListener("click", () => {
-    if (mediaRecorder && mediaRecorder.state === "recording") {
+    if (isRecording) {
       stopRecording();
     } else {
       initAudioContext();
@@ -665,6 +680,8 @@ document.addEventListener("DOMContentLoaded", () => {
   settingsBtn.addEventListener("click", () => {
     window.location.href = "/settings";
   });
+
+  uploadForm.addEventListener("submit", handleFileUpload);
 
   initApp();
 });
