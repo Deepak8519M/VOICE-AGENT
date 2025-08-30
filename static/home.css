@@ -188,6 +188,16 @@ header {
     0 10px 24px rgba(255, 141, 4, 0.3);
 }
 
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 8px;
+}
+
 .nav-links {
   display: flex;
   gap: 24px;
@@ -521,5 +531,136 @@ footer a:hover {
   }
   .mock {
     max-width: 90%;
+  }
+}
+
+/* Updated media query for screens below 480px with toggle functionality */
+@media (max-width: 480px) {
+  .nav {
+    flex-direction: column;
+    gap: 20px;
+    padding: 12px 0;
+  }
+  .brand {
+    font-size: 1rem;
+  }
+  .hero-grid {
+    /* background: greenyellow; */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .btn.start {
+    /* background: red; */
+    width: 200px;
+    text-align: center;
+    margin: 10px auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .logo {
+    width: 32px;
+    height: 32px;
+  }
+  .hero-text {
+    /* background: red; */
+    margin: 20px auto;
+    width: 100%;
+  }
+  .strip {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* background: blue; */
+  }
+  .strip-inner {
+    font-size: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .menu-toggle {
+    display: block;
+    position: absolute;
+    right: 20px;
+    top: 16px;
+  }
+  .nav-links {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(17, 17, 20, 0.95),
+      rgba(17, 17, 20, 0.75)
+    );
+    padding: 20px;
+    border-radius: 0 0 var(--radius) var(--radius);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    z-index: 99;
+  }
+  .nav-links.active {
+    display: flex;
+  }
+  .nav-links a {
+    padding: 12px 16px;
+    width: 100%;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius);
+  }
+  .nav-links a:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .hero {
+    padding: 60px 0 40px;
+    min-height: 80vh;
+  }
+  h1 {
+    font-size: clamp(1.75rem, 5vw, 2.5rem);
+  }
+  .sub {
+    font-size: clamp(0.875rem, 1.5vw, 1rem);
+  }
+  .cta {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .btn {
+    padding: 12px 20px;
+    width: 100%;
+    text-align: center;
+  }
+  .strip-inner {
+    gap: 24px;
+    padding: 12px 16px;
+  }
+  .section h3 {
+    font-size: clamp(1.5rem, 3vw, 1.75rem);
+  }
+  .lead {
+    font-size: clamp(0.875rem, 1.5vw, 1rem);
+    margin-bottom: 24px;
+  }
+  .card {
+    padding: 20px;
+  }
+  .card h4 {
+    font-size: 1rem;
+  }
+  .card p {
+    font-size: 0.875rem;
+  }
+  footer .container {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
   }
 }
