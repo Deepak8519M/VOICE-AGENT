@@ -1,91 +1,93 @@
-# NovaFlow AI Voice Agent
+# 🎙️ NovaFlow AI Voice Agent
 
-NovaFlow AI Voice Agent is a web-based conversational AI application developed as part of the **30 Days of AI Voice Agents challenge (Day 29: Final Documentation)**.  
-It integrates **real-time speech-to-text transcription**, **text-to-speech synthesis**, **generative AI responses**, and **web search capabilities** to provide a seamless voice and text interaction experience.  
+NovaFlow AI Voice Agent is a **web-based conversational AI application** developed as part of the **30 Days of AI Voice Agents challenge (Day 29: Final Documentation)**.
 
-Built with **FastAPI, AssemblyAI, Google Gemini, Murf AI, and Tavily**, NovaFlow supports features like file uploads for knowledge base integration, chat history, customizable settings, and deployment on Render.
+It integrates **real-time speech-to-text transcription, text-to-speech synthesis, generative AI responses, and web search capabilities** to provide a seamless voice and text interaction experience.
+
+Built with **⚡ FastAPI, 🎤 AssemblyAI, 🤖 Google Gemini, 🔊 Murf AI, and 🌐 Tavily**, NovaFlow supports features like **file uploads for knowledge base integration, chat history, customizable settings, and deployment on Render**.
 
 ---
 
-## 🚀 Features
+## ✨ Features
 
-- **Real-Time Voice Interaction**: Capture audio via browser microphone, transcribe speech using AssemblyAI (RealtimeTranscriber), and generate AI responses with Google Gemini, converted to speech via Murf AI.  
-- **Text-Based Interaction**: Send text queries through a chat input and receive AI-generated responses.  
-- **Knowledge Base Integration**: Upload PDF or TXT files to a knowledge base, enabling the AI to summarize or reference uploaded content (e.g., *"Summarize the content of [filename]"*).  
-- **Web Search**: Perform real-time web searches using Tavily API for queries containing *"search," "find," or "look up."*  
-- **Chat History**: Save and retrieve conversation history, with options to create new chats or clear history.  
-- **Customizable Settings**: Configure voice ID, playback speed, conversation type (casual, formal, technical), microphone sensitivity, audio quality, and UI preferences (theme, accent color).  
-- **Email Integration**: Send responses or summaries to email via Zapier webhooks.  
-- **Audio Feedback**: Play sound alerts (*start.mp3*, *stop.mp3*) for voice recording start/stop.  
-- **Responsive UI**: A clean, dark-themed interface with a spinner for loading states, fixed "Stop Listening" button, and favicon support.  
-- **Deployment**: Hosted on **Render** for scalable, production-ready access.  
+* 🎤 **Real-Time Voice Interaction**: Capture audio via browser microphone, transcribe with AssemblyAI (RealtimeTranscriber), generate AI responses with Gemini, and convert to speech via Murf AI.
+* 💬 **Text-Based Interaction**: Send text queries and receive AI-generated responses.
+* 📚 **Knowledge Base Integration**: Upload **PDF/TXT** files for summaries or references (e.g., *“Summarize myfile.pdf”*).
+* 🔎 **Web Search**: Real-time search via **Tavily API** using queries like *search, find, look up*.
+* 🗂️ **Chat History**: Save, retrieve, create, and clear conversations.
+* ⚙️ **Customizable Settings**: Configure **voice ID, speed, style, microphone sensitivity, audio quality, theme, and accent color**.
+* 📧 **Email Integration**: Send responses/summaries via **Zapier webhooks**.
+* 🔔 **Audio Feedback**: Start/Stop sound alerts (`start.mp3`, `stop.mp3`).
+* 🎨 **Responsive UI**: Dark theme, spinner for loading, fixed Stop button, favicon.
+* ☁️ **Deployment**: Hosted on **Render** for scalable access.
 
 ---
 
 ## 📂 Folder Structure
-```
 
+```
 VOICEAGENT/
 │
-├── main.py                 # FastAPI backend with WebSocket for real-time transcription
-├── requirements.txt        # Python dependencies for the project
-├── .env                    # Environment variables (AAI\_API\_KEY, GEMINI\_API\_KEY, etc.)
-├── static/                 # Static assets (JS, CSS, media)
-│   ├── index.js            # Frontend logic for WebSocket, audio recording, and UI
-│   ├── style.css           # Styles for the web interface
-│   ├── settings.js         # JavaScript for settings page
-│   ├── favicon.ico         # Favicon for the web app
-│   ├── start.mp3           # Sound alert for starting voice recording
-│   └── stop.mp3            # Sound alert for stopping voice recording
-├── templates/              # HTML templates for the web interface
-│   ├── index.html          # Main application page
+├── main.py                 # ⚡ FastAPI backend (WebSocket transcription)
+├── requirements.txt        # 📦 Python dependencies
+├── .env                    # 🔑 API keys & secrets
+├── static/                 # 🎨 Static assets
+│   ├── index.js            # Frontend logic
+│   ├── style.css           # UI styles
+│   ├── settings.js         # Settings logic
+│   ├── favicon.ico         # App icon
+│   ├── start.mp3           # 🎵 Start sound
+│   └── stop.mp3            # 🎵 Stop sound
+├── templates/              # 🖼️ HTML templates
+│   ├── index.html          # Main app page
 │   ├── home.html           # Landing page
 │   ├── docs.html           # Documentation page
-│   └── settings.html       # Settings configuration page
-├── uploads/                # Directory for uploaded files and chat history
-│   ├── knowledge\_base/     # Stores uploaded PDF/TXT files and extracted text
-│   └── chats/              # Stores JSON files for chat history (e.g., 1.json)
-└── settings.json           # Stores user settings (voice, theme, etc.)
-
-````
+│   └── settings.html       # Settings page
+├── uploads/                # 📂 Uploaded files + chat history
+│   ├── knowledge_base/     # PDFs/TXTs + extracted text
+│   └── chats/              # 💬 JSON chat history
+└── settings.json           # ⚙️ User settings
+```
 
 ---
 
 ## 🛠️ Prerequisites
 
-- **Python 3.12** (required for backend)  
-- **Node.js** (optional, for frontend asset development)  
-- **API Keys**:  
-  - `AAI_API_KEY` → AssemblyAI (real-time transcription)  
-  - `GEMINI_API_KEY` → Google Gemini (generative AI responses)  
-  - `MURF_API_KEY` → Murf AI (text-to-speech)  
-  - `TAVILY_API_KEY` → Tavily (web search)  
-  - `ZAPIER_WEBHOOK_URL` → Zapier (email integration, optional)  
-- **Browser**: Chrome or Firefox for WebSocket & WebRTC support  
-- **Render Account**: For deployment  
+* 🐍 **Python 3.12** (backend)
+* 🌐 **Node.js (optional)** (frontend dev)
+* 🔑 **API Keys**:
+
+  * 📝 AssemblyAI → `AAI_API_KEY`
+  * 🤖 Google Gemini → `GEMINI_API_KEY`
+  * 🔊 Murf AI → `MURF_API_KEY`
+  * 🔎 Tavily → `TAVILY_API_KEY`
+  * 📧 Zapier Webhook (optional) → `ZAPIER_WEBHOOK_URL`
+* 🌍 **Browser**: Chrome / Firefox (WebSocket + WebRTC support)
+* ☁️ **Render Account** (deployment)
 
 ---
 
-## ⚙️ Setup and Installation
+## ⚙️ Setup & Installation
 
 1. **Clone the Repository**
+
    ```bash
    git clone <your-repository-url>
    cd VOICEAGENT
-```
+   ```
 
-2. **Create and Activate Virtual Environment**
+2. **Create Virtual Environment**
 
    ```bash
    python -m venv venv
-   .\venv\Scripts\activate   # Windows
-   source venv/bin/activate  # macOS/Linux
+   .\venv\Scripts\activate  # Windows  
+   source venv/bin/activate # macOS/Linux
    ```
 
 3. **Install Dependencies**
-   Ensure `requirements.txt` contains:
+   Add to `requirements.txt`:
 
-   ```txt
+   ```
    fastapi==0.112.0
    uvicorn==0.30.3
    assemblyai==0.36.0
@@ -102,10 +104,9 @@ VOICEAGENT/
    pip install -r requirements.txt
    ```
 
-4. **Set Environment Variables**
-   Create `.env` file:
+4. **Set Environment Variables** → `.env`
 
-   ```env
+   ```
    AAI_API_KEY=your_assemblyai_api_key
    GEMINI_API_KEY=your_gemini_api_key
    MURF_API_KEY=your_murf_api_key
@@ -119,63 +120,59 @@ VOICEAGENT/
    mkdir -p uploads/knowledge_base uploads/chats
    ```
 
-6. **Add Static Files**
-   Place `favicon.ico`, `start.mp3`, and `stop.mp3` in `static/`.
+6. **Add Static Files** (`favicon.ico`, `start.mp3`, `stop.mp3`) to `/static`
 
 ---
 
-## ▶️ Usage
+## 🚀 Usage
 
-### Run Locally
+### ▶️ Run Locally
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Open: [http://localhost:8000/app](http://localhost:8000/app)
+Open 👉 [http://localhost:8000/app](http://localhost:8000/app)
 
-### Voice Interaction
+### 🎤 Voice Interaction
 
-* Click **microphone button** (`#micBtn`) → speak (≥1 sec).
-* Click **Stop Listening** (`#stopListening`).
-* Transcription + AI response appear in chat.
-* Hear response via **Murf AI TTS**.
+1. Click **Mic Button** 🎙️ (#micBtn)
+2. Speak for ≥ 1 sec (*e.g., “Tell me about AI”*)
+3. Click **Stop Listening** 🛑 (#stopListening)
+4. View transcript + AI response in chat 💬
+5. Hear reply via Murf AI 🔊
 
-### Text Interaction
+### 💬 Text Interaction
 
-* Type in chat input (`#chatInput`) → click **send button** (`#sendBtn`).
+* Type in **chat input** (#chatInput)
+* Click **Send** (#sendBtn)
 
-### Knowledge Base
+### 📚 Knowledge Base
 
-* Upload **PDF/TXT** at `/settings`.
-* Query: `"Summarize myfile.pdf"`.
+* Upload **PDF/TXT** via `/settings`
+* Query with: *“Summarize myfile.pdf”*
 
-### Web Search
+### 🔎 Web Search
 
-* Use queries like `"search for AI trends"`.
+* Queries like: *“search for AI trends”*
 
-### Settings
+### ⚙️ Settings
 
-* Configure:
+* Configure **voice, speed, conversation type, mic sensitivity, theme, accent color**
+* Enable/disable **search, knowledge base, chat saving**
 
-  * Voice ID, playback speed
-  * Conversation type (casual, formal, technical)
-  * Mic sensitivity, audio quality
-  * Theme, accent color
-  * Enable/disable search, KB, chat history
+### 🗂️ Chat History
 
-### Chat History
+* View chats at `/chats`
+* Create new or clear history
 
-* View at `/chats`.
-* Create new chats / clear history.
+### 📧 Email Integration
 
-### Email Integration
-
-* Say: `"send to email"` or `"email the summary"` → via Zapier.
+* Say *“send to email”* or *“email the summary”* → Zapier
 
 ---
 
-## 🌐 Deployment on Render
+## ☁️ Deployment on Render
 
 1. **Push to Git**
 
@@ -185,86 +182,70 @@ Open: [http://localhost:8000/app](http://localhost:8000/app)
    git push origin main
    ```
 
-2. **Create Render Web Service**
+2. **Render Setup**
 
-   * Build Command:
+   * Build Command: `pip install -r requirements.txt`
+   * Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
+   * Add environment variables
 
-     ```bash
-     pip install -r requirements.txt
-     ```
-   * Start Command:
+3. **Deploy & Monitor Logs** (\~5–10 mins)
 
-     ```bash
-     uvicorn main:app --host 0.0.0.0 --port $PORT
-     ```
-   * Add environment variables in Render.
+4. Access 🌍:
 
-3. **Deploy**
+   ```
+   https://<your-service>.onrender.com/app
+   ```
 
-   * Wait \~5–10 mins.
-   * Access at:
-
-     ```
-     https://<your-service>.onrender.com/app
-     ```
+   Example: `https://novaflow-agent.onrender.com/app`
 
 ---
 
 ## 🐞 Troubleshooting
 
-* **ModuleNotFoundError: `assemblyai.streaming`**
+* ❌ **ModuleNotFoundError: 'assemblyai.streaming'**
 
-  * Ensure `assemblyai==0.36.0`.
-  * If using older version: `assemblyai==0.26.0` with
+  * Ensure `assemblyai==0.36.0`
+  * Import: `from assemblyai import RealtimeTranscriber`
+  * Else: downgrade → `0.26.0`
 
-    ```python
-    from assemblyai.streaming.v3 import ...
-    ```
+* 🎙️ **Voice Input Issues**
 
-* **Voice Input Issues**
+  * Speak > 1 sec
+  * Check API key validity
+  * Allow mic access
 
-  * Speak >1 second.
-  * Check `AAI_API_KEY`.
-  * Ensure mic permissions granted.
+* ⚠️ **UI Errors**
 
-* **UI Errors (spinner/JSON warnings)**
+  * Use latest `index.js` (Aug 29, 2025, 20:40 IST)
+  * Ensure `favicon.ico`, `start.mp3`, `stop.mp3` exist
 
-  * Use updated `index.js` (Aug 29, 2025).
-  * Ensure favicon & audio files exist.
+* 🌍 **Environment Issues**
 
-* **Environment Issues**
+  * Activate correct venv
+  * Consolidate files to project root
 
-  * Activate venv properly.
-  * Keep project consolidated.
+* ☁️ **Render Issues**
 
-* **Render Issues**
-
-  * Check logs & environment vars.
+  * Check logs
+  * Verify `requirements.txt` + `.env`
 
 ---
 
 ## ⚠️ Known Issues
 
-* Recordings <1s cause error → speak ≥2–3s.
-* PDF extraction may fail (use TXT fallback).
-* Murf AI TTS may have slight latency.
+* ⏱️ **Short Recordings** (<1s) → Error
+* 📄 **PDF Extraction**: Some PDFs fail, use TXT fallback
+* 🔊 **Murf AI Latency**: Small delays possible
 
 ---
 
 ## 🤝 Contributing
 
-1. Fork repository
-2. Create branch:
-
-   ```bash
-   git checkout -b feature/your-feature
-   ```
-3. Commit changes:
-
-   ```bash
-   git commit -m "Add your feature"
-   ```
-4. Push branch & open PR
+1. Fork 🍴 the repo
+2. Create branch → `git checkout -b feature/your-feature`
+3. Commit → `git commit -m "Add your feature"`
+4. Push → `git push origin feature/your-feature`
+5. Open a PR 🚀
 
 ---
 
@@ -276,27 +257,22 @@ This project is licensed under the **MIT License**.
 
 ## 🙌 Acknowledgments
 
-* **30 Days of AI Voice Agents Challenge**: Inspiration
-* **AssemblyAI**: Speech-to-text
-* **Google Gemini**: Generative AI
-* **Murf AI**: Text-to-speech
-* **Tavily**: Web search
-* **FastAPI**: Backend framework
-* **Render**: Cloud deployment
+* 🎤 **AssemblyAI**: Real-time transcription
+* 🤖 **Google Gemini**: Generative AI
+* 🔊 **Murf AI**: TTS
+* 🔎 **Tavily**: Web search
+* ⚡ **FastAPI**: Backend
+* ☁️ **Render**: Hosting
+* 💡 **30 Days of AI Voice Agents Challenge**: Inspiration
 
 ---
 
 ## 📬 Contact
 
-For questions or feedback:
+💼 Reach out on **LinkedIn** or via **GitHub Issues**.
 
-* Reach out via **LinkedIn**
-* Or submit issues on the **GitHub repository**
+✨ Built for **Day 29 of the 30 Days of AI Voice Agents Challenge, August 2025**
 
 ---
 
-✨ Built for **Day 29** of the **30 Days of AI Voice Agents Challenge**, *August 2025*
-
-```
-
-
+Would you like me to also **add badges (e.g., Python version, License, Render status, Made with ❤️)** at the top to make it even more like a professional open-source README?
