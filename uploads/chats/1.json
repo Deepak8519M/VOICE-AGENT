@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "timestamp": "2025-08-31T01:48:35.103240",
+    "user_query": "hi",
+    "ai_response": "Hey there! How can I help you today?\n"
+  },
+  {
+    "timestamp": "2025-08-31T01:51:53.897304",
+    "user_query": "Summarize cloud computin unit 2 and also find trends of jobs in it and send to emai",
+    "ai_response": "Here are the top search results:\n1. Unit 2 (pdf) - CliffsNotes: Unit-2 CloudInfrastructure 1. What is cloud computing? Cloud computing is the on-demand delivery of IT resources over the Internet with... (Source: https://www.cliffsnotes.com/study-notes/23041084)\n2. Unit 2 | PDF | Cloud Computing | Software As A Service - Scribd: The document provides an overview of cloud computing, detailing its definition, types (public, private, hybrid, and community clouds), and the deployment of... (Source: https://www.scribd.com/presentation/878234928/Unit-2)\n3. [PDF] Unit-2 - Cloud Computing Architecture - Naresh Prasad Das: Cloud infrastructure consists of hardware and software components such as data storage, server, virtualization software, etc. It also provides a Graphical User... (Source: http://www.nareshpd.com.np/upload/Cloud_Computing/Cloud_Computing_Unit_2.pdf)\n"
+  },
+  {
+    "timestamp": "2025-08-31T01:52:16.667686",
+    "user_query": "okay thank you",
+    "ai_response": "No problem at all!  What can I help you with today?\n"
+  }
+]

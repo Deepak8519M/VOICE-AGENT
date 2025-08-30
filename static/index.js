@@ -11,6 +11,7 @@ let mediaRecorder = null;
 let stream = null;
 let audioBuffer = [];
 let lastSendTime = 0;
+let isRecording = false;
 
 const SAMPLE_RATE = 44100; // Murf output sample rate
 const CHANNELS = 1;
@@ -375,8 +376,10 @@ function connectWebSocket() {
         );
         initAudioContext();
         await queueAudio(jsonData.data, jsonData.is_final);
-        const ripples = document.querySelectorAll(".ripple");
-        ripples.forEach((ripple) => ripple.classList.add("active"));
+        if (isRecording) {
+          const ripples = document.querySelectorAll(".ripple");
+          ripples.forEach((ripple) => ripple.classList.add("active"));
+        }
       } else if (jsonData.type === "response" && jsonData.data) {
         appendAIMessage(jsonData.data);
         await fetchChatHistory();
@@ -427,7 +430,11 @@ function connectWebSocket() {
           const ripples = document.querySelectorAll(".ripple");
           ripples.forEach((ripple) => {
             ripple.classList.remove("active");
-            setTimeout(() => ripple.classList.add("active"), 50);
+            setTimeout(() => {
+              if (isRecording) {
+                ripple.classList.add("active");
+              }
+            }, 50);
           });
         }, 1500);
       } else if (data === "Stopped transcription") {
@@ -507,6 +514,7 @@ async function startRecording() {
     };
     mediaRecorder.start(AUDIO_BUFFER_INTERVAL);
     ws.send("start");
+    isRecording = true;
     status.textContent = "Status: Transcribing 🎤";
     listeningModal.style.display = "flex";
   } catch (error) {
@@ -528,6 +536,17 @@ function stopRecording() {
       audioBuffer = [];
     }
     ws.send("stop");
+    isRecording = false;
+    clearInterval(rippleInterval);
+    rippleInterval = null;
+    const ripples = document.querySelectorAll(".ripple");
+    ripples.forEach((ripple) => {
+      ripple.classList.remove("active");
+      ripple.style.animation = "none";
+    });
+    listeningModal.style.display = "none";
+    status.textContent = "Status: Stopping transcription... ⏳";
+    showNotification("Stopping transcription...");
   }
 }
 
