@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, maximum-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Voice Agent 🎙️</title>
     <link rel="stylesheet" href="/static/style.css" />
   </head>
@@ -11,7 +11,14 @@
       <div class="notification" id="notification" style="display: none">
         Audio saved successfully! ✅
       </div>
-      <div class="left-sidebar">
+      <div class="left-sidebar" id="leftSidebar">
+        <button
+          class="close-btn glossy"
+          id="closeLeftSidebar"
+          aria-label="Close left sidebar"
+        >
+          ✖
+        </button>
         <button id="newChatBtn" class="new-chat-btn glossy">
           New Conversation ✨
         </button>
@@ -31,6 +38,22 @@
         <ul id="chatList" class="chat-list"></ul>
       </div>
       <div class="main-content">
+        <div class="toggle-buttons">
+          <button
+            id="toggleLeftSidebar"
+            class="toggle-btn glossy"
+            aria-label="Open menu"
+          >
+            ☰ Menu
+          </button>
+          <button
+            id="toggleRightSidebar"
+            class="toggle-btn glossy"
+            aria-label="Open history"
+          >
+            📜 History
+          </button>
+        </div>
         <div class="transcription-box">
           <h2>Current Conversation 📝</h2>
           <div id="transcription" class="transcription-content">
@@ -41,28 +64,51 @@
               type="text"
               id="chatInput"
               placeholder="Type your message or ask to search..."
+              aria-label="Chat input"
             />
-            <button id="sendBtn" class="send-btn glossy">Send</button>
-            <button id="micBtn" class="mic-btn glossy circular">🎤</button>
+            <button
+              id="sendBtn"
+              class="send-btn glossy"
+              aria-label="Send message"
+            >
+              Send
+            </button>
+            <button
+              id="micBtn"
+              class="mic-btn glossy circular"
+              aria-label="Record audio"
+            >
+              🎤
+            </button>
           </div>
         </div>
       </div>
-      <div class="right-sidebar">
+      <div class="right-sidebar" id="rightSidebar">
+        <button
+          class="close-btn glossy"
+          id="closeRightSidebar"
+          aria-label="Close right sidebar"
+        >
+          ✖
+        </button>
         <div class="navigation glossy">
           <a href="/" style="text-decoration: none" class="nav-btn homeBtn"
             >Home🏠</a
           >
-          <button id="settingsBtn" class="nav-btn settings-btn glossy">
+          <button
+            id="settingsBtn"
+            class="nav-btn settings-btn glossy"
+            aria-label="Settings"
+          >
             ⚙️
           </button>
           <a
             href="/docu"
             style="text-decoration: none"
-            id="settingsBtn"
+            id="docsBtn"
             class="nav-btn docsBtn glossy"
+            >Docs📄</a
           >
-            Docs📄
-          </a>
         </div>
         <div class="chat-history-box">
           <h2>Conversation History 📜</h2>
@@ -87,11 +133,43 @@
           <div class="ripple ripple3"></div>
         </div>
         <p>Listening...</p>
-        <button id="stopListening" class="stop-btn glossy circular">
+        <button
+          id="stopListening"
+          class="stop-btn glossy circular"
+          aria-label="Stop listening"
+        >
           Stop Listening
         </button>
       </div>
     </div>
     <script src="/static/index.js"></script>
+    <script>
+      // Toggle sidebars for small screens
+      document
+        .getElementById("toggleLeftSidebar")
+        .addEventListener("click", () => {
+          document.getElementById("leftSidebar").classList.toggle("active");
+          document.getElementById("rightSidebar").classList.remove("active");
+        });
+
+      document
+        .getElementById("toggleRightSidebar")
+        .addEventListener("click", () => {
+          document.getElementById("rightSidebar").classList.toggle("active");
+          document.getElementById("leftSidebar").classList.remove("active");
+        });
+
+      document
+        .getElementById("closeLeftSidebar")
+        .addEventListener("click", () => {
+          document.getElementById("leftSidebar").classList.remove("active");
+        });
+
+      document
+        .getElementById("closeRightSidebar")
+        .addEventListener("click", () => {
+          document.getElementById("rightSidebar").classList.remove("active");
+        });
+    </script>
   </body>
 </html>
