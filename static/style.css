@@ -930,6 +930,7 @@ body {
   justify-content: center;
   transition: all 0.3s ease;
   margin-bottom: 10px;
+  display: none;
 }
 .close-btn.cl {
   background: red;
@@ -938,6 +939,7 @@ body {
   margin-top: 20px;
   margin-bottom: 30px;
   border-radius: 20px;
+  display: none;
 }
 .close-btn:hover {
   box-shadow: 0 4px 15px rgba(239, 68, 68, 0.6);
@@ -1268,5 +1270,11 @@ body {
   }
   .nav-btn {
     width: 60%;
+  }
+  .close-btn.cl {
+    display: block;
+  }
+  .close-btn {
+    display: block;
   }
 }
