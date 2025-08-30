@@ -195,6 +195,8 @@ body {
   overflow-y: auto;
   box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
+  position: relative;
+  background: green;
 }
 
 .left-sidebar:hover {
@@ -915,22 +917,20 @@ body {
 }
 
 .close-btn {
-  position: absolute;
-  top: 10px;
-  right: 30px;
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: var(--text);
   padding: 8px;
   border: none;
-  border-radius: 50%;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 14px;
-  width: 32px;
+  display: none;
   height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  margin-bottom: 10px;
 }
 
 .close-btn:hover {
@@ -1132,11 +1132,12 @@ body {
     min-width: 80px;
   }
   .close-btn {
-    width: 44px;
-    height: 44px;
+    width: 100%;
+    margin: 10px auto;
     font-size: 14px;
-    top: 5px;
-    right: 5px;
+    position: block;
+    background: red;
+    color: white;
   }
   .left-sidebar,
   .right-sidebar {
