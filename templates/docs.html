@@ -194,6 +194,33 @@
         align-items: center;
         cursor: pointer;
         font-size: 13px;
+        border: 4px solid transparent;
+        /* background: red; */
+      }
+      .nav-btn:hover {
+        background: transparent;
+        border: 4px solid var(--accent);
+        color: var(--accent);
+      }
+
+      @media (max-width: 450px) {
+        .nav-btn {
+          font-size: 9px;
+          padding: 5px 10px;
+        }
+        .nav-btn:hover {
+          background: transparent;
+          border: 2px solid var(--accent);
+        }
+        .button {
+          padding: 2px;
+          /* background: red; */
+          gap: 5px;
+        }
+
+        header h1 {
+          font-size: 13px;
+        }
       }
     </style>
   </head>
@@ -203,7 +230,7 @@
       <h1>📄 NovaFlow Documentation</h1>
       <div class="button">
         <button class="nav-btn btn" data-nav="home">Home</button>
-        <button class="nav-btn btn" data-nav="voice-agent">Voice Agent</button>
+        <button class="nav-btn btn" data-nav="voice-agent">Agent</button>
       </div>
     </header>
 

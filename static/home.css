@@ -326,7 +326,7 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 16px;
   padding: 24px;
-  min-height: 360px;
+  height: 360px;
   position: relative;
   overflow: hidden;
 }
@@ -347,6 +347,12 @@ h1 {
   flex-wrap: wrap;
   position: relative;
   z-index: 1;
+}
+.chips h2 {
+  padding: 10px;
+  display: block;
+  width: 100%;
+  text-align: center;
 }
 
 .chip {
@@ -585,8 +591,8 @@ footer a:hover {
   .menu-toggle {
     display: block;
     position: absolute;
-    right: 20px;
-    top: 16px;
+    right: 10px;
+    top: 3px;
   }
   .nav-links {
     display: none;
@@ -637,6 +643,9 @@ footer a:hover {
     padding: 12px 20px;
     width: 100%;
     text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
   .strip-inner {
     gap: 24px;
@@ -662,5 +671,17 @@ footer a:hover {
     flex-direction: column;
     text-align: center;
     gap: 16px;
+  }
+  .mock {
+    height: 400px;
+    /* background: red; */
+  }
+  .screen {
+    /* background: gold; */
+    height: 300px;
+  }
+  .chip {
+    font-size: 10px;
+    margin-bottom: 2px;
   }
 }

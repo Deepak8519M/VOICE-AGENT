@@ -639,18 +639,14 @@ body {
     width: 90%;
     margin: 10px auto;
   }
-  .option {
-    background: gold;
-  }
+
   input {
     width: 90%;
   }
   .settings-card label {
     font-size: 10px;
   }
-  .menu-toggle {
-    /* background: red; */
-  }
+
   .settings-sidebar {
     /* background: red; */
     width: 90%;
