@@ -14,16 +14,78 @@
     <div class="settings-container">
       <!-- Sidebar -->
       <aside class="settings-sidebar">
+        <button class="menu-toggle glossy" aria-label="Toggle menu">☰</button>
         <ul>
-          <li class="active" data-section="configure-api">⚙️ Configure API</li>
-          <li data-section="voice">🎙️ Voice Settings</li>
-          <li data-section="conversation">💬 Conversation</li>
-          <li data-section="audio">🎤 Audio Settings</li>
-          <li data-section="chat-history">📜 Chat History</li>
-          <li data-section="knowledge-base">📚 Knowledge Base</li>
-          <li data-section="search">🔍 Search Settings</li>
-          <li data-section="notifications">🔔 Notifications</li>
-          <li data-section="appearance">🎨 Appearance</li>
+          <li class="active" data-section="configure-api">
+            <span>⚙️ Configure API</span>
+            <!-- <button class="expand-btn" aria-expanded="true">▼</button> -->
+            <ul class="sub-menu active">
+              <li><a href="#api-keys">API Keys</a></li>
+            </ul>
+          </li>
+          <li data-section="voice">
+            <span>🎙️ Voice Settings</span>
+            <button class="expand-btn" aria-expanded="false">▶</button>
+            <ul class="sub-menu">
+              <li><a href="#voice-selection">Voice Selection</a></li>
+              <li><a href="#speed">Speed</a></li>
+            </ul>
+          </li>
+          <li data-section="conversation">
+            <span>💬 Conversation</span>
+            <button class="expand-btn" aria-expanded="false">▶</button>
+            <ul class="sub-menu">
+              <li><a href="#type">Conversation Type</a></li>
+            </ul>
+          </li>
+          <li data-section="audio">
+            <span>🎤 Audio Settings</span>
+            <button class="expand-btn" aria-expanded="false">▶</button>
+            <ul class="sub-menu">
+              <li><a href="#sensitivity">Sensitivity</a></li>
+              <li><a href="#quality">Quality</a></li>
+            </ul>
+          </li>
+          <li data-section="chat-history">
+            <span>📜 Chat History</span>
+            <button class="expand-btn" aria-expanded="false">▶</button>
+            <ul class="sub-menu">
+              <li><a href="#auto-save">Auto-save</a></li>
+              <li><a href="#clear">Clear</a></li>
+            </ul>
+          </li>
+          <li data-section="knowledge-base">
+            <span>📚 Knowledge Base</span>
+            <button class="expand-btn" aria-expanded="false">▶</button>
+            <ul class="sub-menu">
+              <li><a href="#include">Include</a></li>
+              <li><a href="#clear-kb">Clear</a></li>
+            </ul>
+          </li>
+          <li data-section="search">
+            <span>🔍 Search Settings</span>
+            <button class="expand-btn" aria-expanded="false">▶</button>
+            <ul class="sub-menu">
+              <li><a href="#enable">Enable</a></li>
+              <li><a href="#results">Max Results</a></li>
+            </ul>
+          </li>
+          <li data-section="notifications">
+            <span>🔔 Notifications</span>
+            <button class="expand-btn" aria-expanded="false">▶</button>
+            <ul class="sub-menu">
+              <li><a href="#sound">Sound</a></li>
+              <li><a href="#duration">Duration</a></li>
+            </ul>
+          </li>
+          <li data-section="appearance">
+            <span>🎨 Appearance</span>
+            <button class="expand-btn" aria-expanded="false">▶</button>
+            <ul class="sub-menu">
+              <li><a href="#theme">Theme</a></li>
+              <li><a href="#color">Accent Color</a></li>
+            </ul>
+          </li>
         </ul>
       </aside>
 

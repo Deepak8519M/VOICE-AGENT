@@ -49,6 +49,56 @@ function applyTheme(theme, accentColor) {
   );
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const menuToggle = document.querySelector(".menu-toggle");
+  const sidebarUl = document.querySelector(".settings-sidebar ul");
+  const expandButtons = document.querySelectorAll(".expand-btn");
+  const sidebarItems = document.querySelectorAll(
+    ".settings-sidebar li[data-section]"
+  );
+
+  // Toggle sidebar on mobile
+  menuToggle.addEventListener("click", () => {
+    sidebarUl.classList.toggle("active");
+    menuToggle.textContent = sidebarUl.classList.contains("active") ? "✖" : "☰";
+  });
+
+  // Accordion functionality
+  expandButtons.forEach((button) => {
+    button.addEventListener("click", (e) => {
+      const subMenu = e.target.nextElementSibling;
+      const isExpanded = e.target.getAttribute("aria-expanded") === "true";
+      e.target.setAttribute("aria-expanded", !isExpanded);
+      e.target.textContent = isExpanded ? "▶" : "▼";
+      subMenu.classList.toggle("active");
+      e.stopPropagation(); // Prevent triggering the parent li click
+    });
+  });
+
+  // Sidebar navigation
+  sidebarItems.forEach((item) => {
+    item.addEventListener("click", (e) => {
+      const section = item.getAttribute("data-section");
+      document
+        .querySelectorAll(".settings-card")
+        .forEach((card) => card.classList.remove("active"));
+      document.getElementById(section).classList.add("active");
+      sidebarItems.forEach((li) => li.classList.remove("active"));
+      item.classList.add("active");
+      if (window.innerWidth <= 900) {
+        sidebarUl.classList.remove("active");
+        menuToggle.textContent = "☰";
+      }
+    });
+  });
+
+  // Initial active section
+  const initialSection = document.querySelector(".settings-card.active");
+  if (initialSection) {
+    initialSection.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+});
+
 // Load saved settings from server on page load
 async function loadSettings() {
   try {

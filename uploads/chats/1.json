@@ -1,12 +1,1 @@
-[
-  {
-    "timestamp": "2025-08-29T18:38:48.494869",
-    "user_query": "Hi",
-    "ai_response": "Hey there! How can I help you today?\n"
-  },
-  {
-    "timestamp": "2025-08-29T18:39:36.154456",
-    "user_query": "So summarize cloud computing unit 2 and send to email.",
-    "ai_response": "Hey there!  Here's a quick summary of your Cloud Computing Unit 2:\n\nUnit 2 focuses on virtual machines (VMs) and how they're used to virtualize clusters and data centers.  The main idea is to make better use of computer hardware by letting multiple virtual machines share the same physical machine.  This improves resource use and makes applications more flexible.\n\nThe unit explains different levels of virtualization, including the hypervisor (or VMM) which acts as a layer between the hardware and the VMs.  It also covers virtualization at various levels: instruction set architecture, hardware, operating system, library support, and application levels.  Basically, it shows how virtualization improves the use of compute engines, networks, and storage.\n\nLet me know if you'd like any more details on a specific part!\n"
-  }
-]
+[]

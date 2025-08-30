@@ -1,5 +1,3 @@
-/* static/settings.css */
-
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&family=Urbanist:wght@300;400;500;600;700;900&display=swap");
 
 :root {
@@ -159,6 +157,7 @@ body {
   transition: all 0.3s ease;
   border: 1px solid var(--border);
   color: var(--text);
+  position: relative;
 }
 
 .settings-sidebar li:hover {
@@ -174,6 +173,58 @@ body {
     rgba(var(--accent-color), 0.3)
   );
   border: 1px solid rgba(var(--accent-color), 0.4);
+}
+
+.settings-sidebar .menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 8px;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.settings-sidebar .expand-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0;
+}
+
+.settings-sidebar .sub-menu {
+  list-style: none;
+  padding: 0 0 0 20px;
+  margin: 0;
+  display: none;
+  transition: all 0.3s ease;
+}
+
+.settings-sidebar .sub-menu.active {
+  display: block;
+}
+
+.settings-sidebar .sub-menu li a {
+  display: block;
+  padding: 10px 15px;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 8px;
+}
+
+.settings-sidebar .sub-menu li a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
 }
 
 .settings-main {
@@ -270,6 +321,7 @@ body {
   font-weight: 500;
   color: var(--text);
   flex: 0 0 200px;
+  max-width: 200px;
 }
 
 .option input[type="text"],
@@ -461,20 +513,146 @@ body {
 @media (max-width: 900px) {
   .settings-container {
     flex-direction: column;
-  }
-  .settings-sidebar,
-  .settings-main {
-    width: 100%;
     height: auto;
   }
   .settings-sidebar {
+    width: 100%;
+    min-width: 0;
+    padding: 20px;
     border-right: none;
     border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .settings-sidebar .menu-toggle {
+    display: block;
+  }
+  .settings-sidebar ul {
+    display: none;
+  }
+  .settings-sidebar ul.active {
+    display: block;
   }
   .settings-main {
+    width: 100%;
+    padding: 16px;
     border-top: 1px solid var(--border);
   }
   .settings-card {
     max-width: 100%;
+    padding: 16px;
+    margin-bottom: 15px;
+  }
+  .option label {
+    flex: 0 0 150px;
+    max-width: 150px;
+  }
+  .option input[type="text"],
+  .option input[type="password"],
+  .option input[type="number"],
+  .option select {
+    padding: 10px;
+    font-size: 13px;
+  }
+  .save-btn,
+  .reset-btn,
+  .preview-btn,
+  .cancel-btn {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+  .nav-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  .header-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .settings-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+/* New media query for 500px to 900px */
+@media (max-width: 900px) and (min-width: 501px) {
+  .settings-sidebar {
+    padding: 15px;
+    min-height: 200px;
+  }
+  .settings-sidebar li {
+    padding: 12px 15px;
+    font-size: 12px;
+  }
+  .settings-sidebar .sub-menu li a {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  .settings-sidebar .expand-btn {
+    font-size: 0.7rem;
+    right: 5px;
+  }
+  .settings-main {
+    padding: 12px;
+  }
+  .settings-card {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .option label {
+    flex: 0 0 120px;
+    max-width: 120px;
+    font-size: 12px;
+  }
+  .option input[type="text"],
+  .option input[type="password"],
+  .option input[type="number"],
+  .option select {
+    padding: 8px;
+    font-size: 12px;
+  }
+  .save-btn,
+  .reset-btn,
+  .preview-btn,
+  .cancel-btn {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+  .nav-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .header-buttons,
+  .settings-footer {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 450px) {
+  .settings-main {
+    /* background: red; */
+    width: 80%;
+    margin: 10px auto;
+  }
+  .settings-card {
+    /* background: blueviolet; */
+    width: 90%;
+    margin: 10px auto;
+  }
+  .option {
+    /* background: gold; */
+  }
+  input {
+    width: 90%;
+  }
+  .settings-card label {
+    font-size: 10px;
+  }
+  .menu-toggle {
+    /* background: red; */
+  }
+  .settings-sidebar {
+    /* background: red; */
+    width: 90%;
   }
 }
