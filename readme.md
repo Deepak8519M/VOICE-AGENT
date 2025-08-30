@@ -273,6 +273,4 @@ This project is licensed under the **MIT License**.
 
 ✨ Built for **Day 29 of the 30 Days of AI Voice Agents Challenge, August 2025**
 
----
 
-Would you like me to also **add badges (e.g., Python version, License, Render status, Made with ❤️)** at the top to make it even more like a professional open-source README?
