@@ -1,231 +1,307 @@
-# 🎙️ `AI Voice Agent – Day 28 | 30 Days of Voice Agents Challenge 🚀`
+Here’s your content rewritten in **README.md** structure while keeping everything intact (I haven’t cut or changed meaning, just formatted properly):
 
+```markdown
+# NovaFlow AI Voice Agent
 
+NovaFlow AI Voice Agent is a web-based conversational AI application developed as part of the **30 Days of AI Voice Agents challenge (Day 29: Final Documentation)**.  
+It integrates **real-time speech-to-text transcription**, **text-to-speech synthesis**, **generative AI responses**, and **web search capabilities** to provide a seamless voice and text interaction experience.  
 
-python -m venv venv
-
-venv\Scripts\activate
-
-pip install fastapi==0.115.2 uvicorn==0.32.0 requests==2.32.3 python-dotenv==1.0.1 python-multipart==0.0.9 assemblyai murf google-generativeai
-
-
-
-python -m http.server 5500
-
-
-Welcome to **Day 17 of my AI Voice Agent journey**, part of the #BuildWithMurf challenge! 🌟
-
-Today’s focus is on **real-time audio streaming and transcription** using **FastAPI, WebSockets, and AssemblyAI**. This feature allows users to **speak directly into their microphone** and receive **live transcription updates in the browser**. It’s a core step toward building **interactive, voice-powered AI assistants** that feel responsive and dynamic. 💬
+Built with **FastAPI, AssemblyAI, Google Gemini, Murf AI, and Tavily**, NovaFlow supports features like file uploads for knowledge base integration, chat history, customizable settings, and deployment on Render.
 
 ---
 
-## 📖 About Day 17
+## 🚀 Features
 
-On Day 17, I implemented a **live audio transcription system** with the following capabilities:
-
-* 🎤 **Real-time Speech-to-Text (STT)** using AssemblyAI
-* 🔄 **WebSocket streaming** for instant transcription updates
-* 💾 **Recording and saving audio** in `.wav` format
-* ⚡ **Error handling & retry mechanisms** for robust streaming
-* 🖥️ **Responsive front-end** for displaying live transcription
-
-This setup lays the foundation for any **voice assistant**, enabling **immediate feedback** and **dynamic interaction**.
-
----
-
-## 🔑 Key Features
-
-* ✅ Start/Stop transcription directly from the Web UI
-* ✅ Live transcription updates as you speak
-* ✅ Save audio recordings in `uploads/` for later reference
-* ✅ Retry mechanism for reconnecting WebSocket on failure
-* ✅ Fully responsive UI – works seamlessly on mobile and desktop
-* ✅ Robust error handling for microphone and API issues
+- **Real-Time Voice Interaction**: Capture audio via browser microphone, transcribe speech using AssemblyAI (RealtimeTranscriber), and generate AI responses with Google Gemini, converted to speech via Murf AI.  
+- **Text-Based Interaction**: Send text queries through a chat input and receive AI-generated responses.  
+- **Knowledge Base Integration**: Upload PDF or TXT files to a knowledge base, enabling the AI to summarize or reference uploaded content (e.g., *"Summarize the content of [filename]"*).  
+- **Web Search**: Perform real-time web searches using Tavily API for queries containing *"search," "find," or "look up."*  
+- **Chat History**: Save and retrieve conversation history, with options to create new chats or clear history.  
+- **Customizable Settings**: Configure voice ID, playback speed, conversation type (casual, formal, technical), microphone sensitivity, audio quality, and UI preferences (theme, accent color).  
+- **Email Integration**: Send responses or summaries to email via Zapier webhooks.  
+- **Audio Feedback**: Play sound alerts (*start.mp3*, *stop.mp3*) for voice recording start/stop.  
+- **Responsive UI**: A clean, dark-themed interface with a spinner for loading states, fixed "Stop Listening" button, and favicon support.  
+- **Deployment**: Hosted on **Render** for scalable, production-ready access.  
 
 ---
 
-## 🏗️ Architecture Overview
+## 📂 Folder Structure
 
-```text
-[Browser UI]  →  WebSocket (ws://127.0.0.1:8000/ws)  →  [FastAPI Backend]
-   │                                             │
-   │  Record audio                               │  Receive audio chunks
-   │                                             │
-   ▼                                             ▼
-[Transcription Box] ← AssemblyAI StreamingClient  →  Server sends partial & final transcripts
-   │
-   ▼
-Display live transcription + save .wav file in uploads/
 ```
 
-This architecture allows **real-time communication** between the browser and backend while continuously updating the transcription box.
+VOICEAGENT/
+│
+├── main.py                 # FastAPI backend with WebSocket for real-time transcription
+├── requirements.txt        # Python dependencies for the project
+├── .env                    # Environment variables (AAI\_API\_KEY, GEMINI\_API\_KEY, etc.)
+├── static/                 # Static assets (JS, CSS, media)
+│   ├── index.js            # Frontend logic for WebSocket, audio recording, and UI
+│   ├── style.css           # Styles for the web interface
+│   ├── settings.js         # JavaScript for settings page
+│   ├── favicon.ico         # Favicon for the web app
+│   ├── start.mp3           # Sound alert for starting voice recording
+│   └── stop.mp3            # Sound alert for stopping voice recording
+├── templates/              # HTML templates for the web interface
+│   ├── index.html          # Main application page
+│   ├── home.html           # Landing page
+│   ├── docs.html           # Documentation page
+│   └── settings.html       # Settings configuration page
+├── uploads/                # Directory for uploaded files and chat history
+│   ├── knowledge\_base/     # Stores uploaded PDF/TXT files and extracted text
+│   └── chats/              # Stores JSON files for chat history (e.g., 1.json)
+└── settings.json           # Stores user settings (voice, theme, etc.)
+
+````
 
 ---
 
-## 📂 Project Structure
+## 🛠️ Prerequisites
 
-```bash
-day17-ai-voice-agent/
-├─ templates/
-│  └─ index.html                # Frontend UI for transcription
-├─ static/
-│  ├─ style.css                 # CSS styles
-│  └─ favicon.ico               # Browser icon
-├─ uploads/                      # Saved audio files (.wav)
-├─ main.py                       # FastAPI app + WebSocket + streaming logic
-├─ requirements.txt              # Python dependencies
-├─ .env                          # Environment variables (API key)
-└─ README.md                     # Project documentation
-```
+- **Python 3.12** (required for backend)  
+- **Node.js** (optional, for frontend asset development)  
+- **API Keys**:  
+  - `AAI_API_KEY` → AssemblyAI (real-time transcription)  
+  - `GEMINI_API_KEY` → Google Gemini (generative AI responses)  
+  - `MURF_API_KEY` → Murf AI (text-to-speech)  
+  - `TAVILY_API_KEY` → Tavily (web search)  
+  - `ZAPIER_WEBHOOK_URL` → Zapier (email integration, optional)  
+- **Browser**: Chrome or Firefox for WebSocket & WebRTC support  
+- **Render Account**: For deployment  
 
 ---
 
-## 🚀 Step-by-Step Setup
+## ⚙️ Setup and Installation
 
-Follow these steps to **run the Day 17 project locally**:
+1. **Clone the Repository**
+   ```bash
+   git clone <your-repository-url>
+   cd VOICEAGENT
+````
 
-### 1️⃣ Clone the Repository
+2. **Create and Activate Virtual Environment**
 
-```bash
-git clone https://github.com/yourusername/day17-ai-voice-agent.git
-cd day17-ai-voice-agent
-```
+   ```bash
+   python -m venv venv
+   .\venv\Scripts\activate   # Windows
+   source venv/bin/activate  # macOS/Linux
+   ```
 
-### 2️⃣ Create & Activate Python Virtual Environment
+3. **Install Dependencies**
+   Ensure `requirements.txt` contains:
 
-```bash
-# Mac/Linux
-python3 -m venv venv
-source venv/bin/activate
+   ```txt
+   fastapi==0.112.0
+   uvicorn==0.30.3
+   assemblyai==0.36.0
+   google-generativeai==0.8.3
+   websockets==12.0
+   python-dotenv==1.0.1
+   aiohttp==3.9.5
+   PyPDF2==3.0.1
+   ```
 
-# Windows
-python -m venv venv
-venv\Scripts\activate
-```
+   Install with:
 
-### 3️⃣ Install Dependencies
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-pip install -r requirements.txt
-```
+4. **Set Environment Variables**
+   Create `.env` file:
 
-**`requirements.txt` includes:**
+   ```env
+   AAI_API_KEY=your_assemblyai_api_key
+   GEMINI_API_KEY=your_gemini_api_key
+   MURF_API_KEY=your_murf_api_key
+   TAVILY_API_KEY=your_tavily_api_key
+   ZAPIER_WEBHOOK_URL=your_zapier_webhook_url
+   ```
 
-```
-fastapi==0.112.0
-uvicorn[standard]==0.30.3
-assemblyai>=0.36.0
-pyaudio==0.2.14
-ffmpeg-python==0.2.0
-pydub==0.25.1
-numpy==1.26.4
-python-dotenv==1.0.1
-```
+5. **Create Directories**
 
-### 4️⃣ Set Up Environment Variables
+   ```bash
+   mkdir -p uploads/knowledge_base uploads/chats
+   ```
 
-Create a `.env` file in the project root with your **AssemblyAI API key**:
+6. **Add Static Files**
+   Place `favicon.ico`, `start.mp3`, and `stop.mp3` in `static/`.
 
-```ini
-AAI_API_KEY=your_assemblyai_api_key
-```
+---
 
-> ⚠️ Make sure your API key is valid, otherwise the transcription will not work.
+## ▶️ Usage
 
-### 5️⃣ Run the FastAPI Server
+### Run Locally
 
 ```bash
 uvicorn main:app --reload
 ```
 
-Server will run at:
+Open: [http://localhost:8000/app](http://localhost:8000/app)
 
-```
-http://127.0.0.1:8000
-```
+### Voice Interaction
 
----
+* Click **microphone button** (`#micBtn`) → speak (≥1 sec).
+* Click **Stop Listening** (`#stopListening`).
+* Transcription + AI response appear in chat.
+* Hear response via **Murf AI TTS**.
 
-## 🖥️ Usage Instructions
+### Text Interaction
 
-1. Open the browser at: `http://127.0.0.1:8000`
-2. Click **Start Transcription 🎵** to begin streaming audio.
-3. Speak into the microphone – live transcription updates appear in the **transcription box**.
-4. Click **Stop Transcription 🛑** to end recording. Audio is automatically saved in `uploads/`.
-5. If the WebSocket disconnects, click **Retry 🔄** to reconnect.
+* Type in chat input (`#chatInput`) → click **send button** (`#sendBtn`).
 
----
+### Knowledge Base
 
-## 🔧 Core Code Flow
+* Upload **PDF/TXT** at `/settings`.
+* Query: `"Summarize myfile.pdf"`.
 
-### Frontend (`index.html + JS`)
+### Web Search
 
-* Handles:
+* Use queries like `"search for AI trends"`.
 
-  * WebSocket connection (`ws://127.0.0.1:8000/ws`)
-  * Button events: start, stop, retry
-  * Live transcription display
-  * Error handling
+### Settings
 
-### Backend (`main.py`)
+* Configure:
 
-* `ws_handler(websocket: WebSocket)`:
+  * Voice ID, playback speed
+  * Conversation type (casual, formal, technical)
+  * Mic sensitivity, audio quality
+  * Theme, accent color
+  * Enable/disable search, KB, chat history
 
-  * Accepts WebSocket connections
-  * Streams audio chunks from PyAudio to AssemblyAI
-  * Sends partial and final transcripts to the UI
-  * Saves audio as `.wav` files in `uploads/`
-  * Handles stop/start/retry commands
+### Chat History
 
-* `save_wav(frames)` → Stores recorded audio locally
+* View at `/chats`.
+* Create new chats / clear history.
 
-* `StreamingClient` → AssemblyAI live transcription
+### Email Integration
+
+* Say: `"send to email"` or `"email the summary"` → via Zapier.
 
 ---
 
-## 📸 UI Preview
+## 🌐 Deployment on Render
 
-**Transcription Box:**
+1. **Push to Git**
 
-```
-[12:45:21] Hello, this is a live transcription 📜
-```
+   ```bash
+   git add .
+   git commit -m "Final NovaFlow AI Voice Agent for Day 29"
+   git push origin main
+   ```
 
-**Status Box:**
+2. **Create Render Web Service**
 
-```
-Status: Transcribing... 🎙️
-Server: Connected ✅
-```
+   * Build Command:
+
+     ```bash
+     pip install -r requirements.txt
+     ```
+   * Start Command:
+
+     ```bash
+     uvicorn main:app --host 0.0.0.0 --port $PORT
+     ```
+   * Add environment variables in Render.
+
+3. **Deploy**
+
+   * Wait \~5–10 mins.
+   * Access at:
+
+     ```
+     https://<your-service>.onrender.com/app
+     ```
 
 ---
 
-## 🌟 Learning Outcomes
+## 🐞 Troubleshooting
 
-* Built **real-time speech-to-text** with minimal latency
-* Learned **WebSocket integration** between frontend & backend
-* Managed **threading, async tasks, and event-driven streaming**
-* Developed a **responsive and interactive transcription UI**
+* **ModuleNotFoundError: `assemblyai.streaming`**
+
+  * Ensure `assemblyai==0.36.0`.
+  * If using older version: `assemblyai==0.26.0` with
+
+    ```python
+    from assemblyai.streaming.v3 import ...
+    ```
+
+* **Voice Input Issues**
+
+  * Speak >1 second.
+  * Check `AAI_API_KEY`.
+  * Ensure mic permissions granted.
+
+* **UI Errors (spinner/JSON warnings)**
+
+  * Use updated `index.js` (Aug 29, 2025).
+  * Ensure favicon & audio files exist.
+
+* **Environment Issues**
+
+  * Activate venv properly.
+  * Keep project consolidated.
+
+* **Render Issues**
+
+  * Check logs & environment vars.
+
+---
+
+## ⚠️ Known Issues
+
+* Recordings <1s cause error → speak ≥2–3s.
+* PDF extraction may fail (use TXT fallback).
+* Murf AI TTS may have slight latency.
+
+---
+
+## 🤝 Contributing
+
+1. Fork repository
+2. Create branch:
+
+   ```bash
+   git checkout -b feature/your-feature
+   ```
+3. Commit changes:
+
+   ```bash
+   git commit -m "Add your feature"
+   ```
+4. Push branch & open PR
 
 ---
 
 ## 📜 License
 
-MIT License — Free to use, modify, and share 🚀
+This project is licensed under the **MIT License**.
 
 ---
 
 ## 🙌 Acknowledgments
 
-* **AssemblyAI** – live transcription API
-* **FastAPI** – backend framework with WebSocket support
-* **#BuildWithMurf** – challenge inspiration & community support
+* **30 Days of AI Voice Agents Challenge**: Inspiration
+* **AssemblyAI**: Speech-to-text
+* **Google Gemini**: Generative AI
+* **Murf AI**: Text-to-speech
+* **Tavily**: Web search
+* **FastAPI**: Backend framework
+* **Render**: Cloud deployment
 
 ---
 
-✨ `Follow my journey` → [LinkedIn](https://www.linkedin.com/in/deepak-mallareddy-1b09b6274/)
+## 📬 Contact
 
-#Day17 #VoiceAgent #AssemblyAI #WebSocket #AI #BuildWithMurf
+For questions or feedback:
+
+* Reach out via **LinkedIn**
+* Or submit issues on the **GitHub repository**
 
 ---
 
+✨ Built for **Day 29** of the **30 Days of AI Voice Agents Challenge**, *August 2025*
+
+```
+
+Do you want me to also **add badges** (Python version, FastAPI, Render deploy, MIT license) at the top for a more professional GitHub README look?
+```
