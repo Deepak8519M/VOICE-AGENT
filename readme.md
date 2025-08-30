@@ -1,6 +1,3 @@
-Here’s your content rewritten in **README.md** structure while keeping everything intact (I haven’t cut or changed meaning, just formatted properly):
-
-```markdown
 # NovaFlow AI Voice Agent
 
 NovaFlow AI Voice Agent is a web-based conversational AI application developed as part of the **30 Days of AI Voice Agents challenge (Day 29: Final Documentation)**.  
@@ -303,5 +300,4 @@ For questions or feedback:
 
 ```
 
-Do you want me to also **add badges** (Python version, FastAPI, Render deploy, MIT license) at the top for a more professional GitHub README look?
-```
+
