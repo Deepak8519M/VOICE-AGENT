@@ -7,8 +7,13 @@ from typing import Optional, Dict, Any
 import re
 import numpy as np
 
-from assemblyai.streaming.v3 import StreamingClient, StreamingClientOptions, StreamingParameters, StreamingEvents, BeginEvent, TurnEvent, TerminationEvent, StreamingError
-import assemblyai as aai
+try:
+    from assemblyai import RealtimeTranscriber, RealtimeError
+    import assemblyai as aai
+except ImportError as e:
+    logging.error(f"Failed to import assemblyai: {e}")
+    raise
+
 from fastapi import FastAPI, WebSocket, Request, Query, WebSocketException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -162,11 +167,54 @@ async def get_version():
 
 @app.get("/debug_aai")
 async def debug_aai():
-    import assemblyai
-    return {
-        "attributes": dir(assemblyai),
-        "streaming_v3_attributes": dir(assemblyai.streaming.v3)
-    }
+    try:
+        import assemblyai
+        streaming_v3_attrs = []
+        has_streaming_v3 = False
+        streaming_client_available = False
+        realtime_transcriber_available = False
+        try:
+            from assemblyai.streaming.v3 import StreamingClient
+            streaming_v3_attrs = dir(assemblyai.streaming.v3)
+            has_streaming_v3 = True
+            streaming_client_available = "StreamingClient" in streaming_v3_attrs
+            log.debug("Successfully accessed assemblyai.streaming.v3")
+        except ImportError as e:
+            log.error(f"Failed to import assemblyai.streaming.v3: {e}")
+        try:
+            from assemblyai import RealtimeTranscriber
+            realtime_transcriber_available = True
+            log.debug("Successfully accessed assemblyai.RealtimeTranscriber")
+            # Test RealtimeTranscriber initialization and connection
+            aai.settings.api_key = get_api_key("aai_api_key")
+            if aai.settings.api_key:
+                try:
+                    test_transcriber = RealtimeTranscriber(sample_rate=SAMPLE_RATE)
+                    log.debug("Test RealtimeTranscriber initialization successful")
+                    # Test connection with short timeout
+                    try:
+                        test_transcriber.connect()
+                        log.debug("Test RealtimeTranscriber connection successful")
+                        test_transcriber.close()
+                    except Exception as e:
+                        log.error(f"Failed to connect test RealtimeTranscriber: {e}")
+                except Exception as e:
+                    log.error(f"Failed to initialize test RealtimeTranscriber: {e}")
+            else:
+                log.warning("No AssemblyAI API key for test RealtimeTranscriber")
+        except ImportError as e:
+            log.error(f"Failed to import assemblyai.RealtimeTranscriber: {e}")
+        return {
+            "assemblyai_version": assemblyai.__version__,
+            "assemblyai_attributes": dir(assemblyai),
+            "has_streaming_v3": has_streaming_v3,
+            "streaming_v3_attributes": streaming_v3_attrs,
+            "streaming_client_available": streaming_client_available,
+            "realtime_transcriber_available": realtime_transcriber_available
+        }
+    except Exception as e:
+        log.error(f"Error in debug_aai: {e}")
+        return {"error": f"Failed to debug assemblyai: {str(e)}"}
 
 @app.get("/chats")
 async def list_chats():
@@ -547,179 +595,250 @@ async def ws_handler(websocket: WebSocket, chat_id: str = Query(...)):
     await websocket.accept()
     log.info(f"WebSocket connected for chat_id: {chat_id}")
 
-    client = None
+    transcriber = None
+    websocket_open = True
     try:
-        # Configure AssemblyAI StreamingClient
+        # Configure AssemblyAI RealtimeTranscriber
         aai.settings.api_key = get_api_key("aai_api_key", websocket)
-        log.debug("Attempting to initialize StreamingClient")
+        if not aai.settings.api_key:
+            log.error("No valid AssemblyAI API key provided")
+            await websocket.send_json({
+                "type": "error",
+                "data": "No valid AssemblyAI API key provided"
+            })
+            return
+
+        log.debug("Attempting to initialize RealtimeTranscriber")
         try:
-            client = StreamingClient(
-                options=StreamingClientOptions(
-                    api_host="streaming.assemblyai.com"
-                )
+            transcriber = RealtimeTranscriber(
+                sample_rate=SAMPLE_RATE,
+                on_data=lambda data: on_turn(data),
+                on_error=lambda error: on_error(error),
+                on_open=lambda session: on_open(session),
+                on_close=lambda: on_close()
             )
-            log.debug("StreamingClient initialized successfully")
-        except AttributeError as e:
-            log.error(f"Failed to initialize StreamingClient: {e}")
-            await websocket.send_json({
-                "type": "error",
-                "data": f"AssemblyAI SDK error: StreamingClient not found. Ensure assemblyai==0.43.1 and check imports. Error: {str(e)}"
-            })
-            return
+            log.debug("RealtimeTranscriber initialized successfully")
         except Exception as e:
-            log.error(f"Unexpected error initializing StreamingClient: {e}")
+            log.error(f"Failed to initialize RealtimeTranscriber: {e}")
             await websocket.send_json({
                 "type": "error",
-                "data": f"Unexpected error initializing StreamingClient: {str(e)}"
+                "data": f"Failed to initialize RealtimeTranscriber: {str(e)}. Ensure assemblyai==0.43.1 and check imports."
             })
             return
+
+        # Helper function to stream with type checking and error handling
+        async def safe_stream(data, stream_count, context="unknown"):
+            if not isinstance(data, (bytes, bytearray)):
+                log.error(f"Invalid stream data type: {type(data)}, stream_count: {stream_count}, context: {context}")
+                await websocket.send_json({
+                    "type": "error",
+                    "data": f"Invalid stream data type: {type(data)} in {context}"
+                })
+                raise ValueError(f"Invalid stream data type: {type(data)} in {context}")
+            if len(data) < 8192:  # Minimum 0.25s at 16 kHz 16-bit PCM
+                log.warning(f"Data too small in {context}, stream_count: {stream_count}, size: {len(data)} bytes, skipping")
+                return
+            log.debug(f"Streaming {len(data)} bytes, stream_count: {stream_count}, context: {context}")
+            try:
+                transcriber.stream(data)
+                log.debug(f"Streamed {len(data)} bytes, stream_count: {stream_count}, context: {context}")
+            except Exception as e:
+                log.error(f"Streaming error in {context}, stream_count: {stream_count}: {e}")
+                raise
+
+        # Retry connection with exponential backoff
+        async def connect_with_retry(max_attempts=3, initial_delay=1.0):
+            attempt = 1
+            delay = initial_delay
+            while attempt <= max_attempts:
+                try:
+                    log.debug(f"Connection attempt {attempt}/{max_attempts}")
+                    transcriber.connect()
+                    log.debug("Connected to AssemblyAI RealtimeTranscriber")
+                    return True
+                except Exception as e:
+                    log.error(f"Connection attempt {attempt}/{max_attempts} failed: {e}")
+                    if attempt == max_attempts:
+                        log.error("Max connection attempts reached")
+                        return False
+                    await asyncio.sleep(delay)
+                    delay *= 2  # Exponential backoff
+                    attempt += 1
+            return False
 
         all_transcripts = []
         final_transcript = None
         start_time = None
+        stream_count = 0
 
-        async def on_begin(self, event: BeginEvent):
-            log.info(f"Session started: {event.id}")
-            await websocket.send_text("Started transcription")
+        def on_open(session):
+            log.info(f"Session opened: {session.session_id}")
+            if websocket_open:
+                asyncio.create_task(websocket.send_text("Started transcription"))
 
-        async def on_turn(self, event: TurnEvent):
-            transcript_text = event.transcript.strip()
+        def on_turn(data):
+            transcript_text = data.text.strip()
             if transcript_text:
                 all_transcripts.append(transcript_text)
                 log.info(f"Live Transcription: {transcript_text}")
-                await websocket.send_json({
-                    "type": "user_message",
-                    "data": transcript_text,
-                    "is_final": event.end_of_turn
-                })
-                if event.end_of_turn:
-                    nonlocal final_transcript
-                    final_transcript = transcript_text
-                    log.info(f"Final Transcription: {final_transcript}")
-                    await websocket.send_json({"type": "turn_ended"})
-                    await stream_gemini_response(chat_id, final_transcript, websocket, is_voice_input=True)
+                if websocket_open:
+                    asyncio.create_task(websocket.send_json({
+                        "type": "user_message",
+                        "data": transcript_text,
+                        "is_final": data.is_final
+                    }))
+                    if data.is_final:
+                        nonlocal final_transcript
+                        final_transcript = transcript_text
+                        log.info(f"Final Transcription: {final_transcript}")
+                        asyncio.create_task(websocket.send_json({"type": "turn_ended"}))
+                        asyncio.create_task(stream_gemini_response(chat_id, final_transcript, websocket, is_voice_input=True))
 
-        async def on_terminated(self, event: TerminationEvent):
-            log.info(f"Session terminated: {event.audio_duration_seconds} seconds")
-            await websocket.send_text("Stopped transcription")
+        def on_close():
+            log.info("Session closed")
+            if websocket_open:
+                asyncio.create_task(websocket.send_text("Stopped transcription"))
 
-        async def on_error(self, error: StreamingError):
-            log.error(f"Streaming error: {error}")
-            await websocket.send_json({"type": "error", "data": str(error)})
+        def on_error(error: RealtimeError):
+            log.error(f"Realtime error: {error}")
+            if websocket_open:
+                asyncio.create_task(websocket.send_json({"type": "error", "data": str(error)}))
 
-        client.on(StreamingEvents.Begin, on_begin)
-        client.on(StreamingEvents.Turn, on_turn)
-        client.on(StreamingEvents.Termination, on_terminated)
-        client.on(StreamingEvents.Error, on_error)
-
-        log.debug("Connecting to AssemblyAI streaming")
-        client.connect(StreamingParameters(sample_rate=SAMPLE_RATE))
+        log.debug("Connecting to AssemblyAI RealtimeTranscriber with retry")
+        if not await connect_with_retry(max_attempts=3, initial_delay=2.0):
+            log.error("Failed to connect to AssemblyAI after retries")
+            await websocket.send_json({
+                "type": "error",
+                "data": "Failed to connect to AssemblyAI after multiple attempts"
+            })
+            return
 
         audio_buffer = bytearray()
         last_send_time = datetime.now()
 
-        while True:
-            msg = await websocket.receive()
-            if msg["type"] == "websocket.disconnect":
-                log.info("WebSocket disconnected by client")
-                break
-            elif msg["type"] == "websocket.receive":
-                data = msg.get("bytes") or msg.get("text")
-                if isinstance(data, str):
-                    if data == "start":
-                        start_time = datetime.now()
-                        await websocket.send_text("Started transcription")
-                        if USER_SETTINGS.get("enableSound", True):
-                            await websocket.send_json({"type": "sound_alert", "data": "start"})
-                    elif data == "stop":
-                        elapsed_ms = (datetime.now() - start_time).total_seconds() * 1000 if start_time else 0
-                        if elapsed_ms < MIN_AUDIO_DURATION_MS:
-                            log.warning(f"Recording too short: {elapsed_ms:.1f}ms, required: {MIN_AUDIO_DURATION_MS}ms")
-                            await websocket.send_json({
-                                "type": "error",
-                                "data": f"Recording too short ({elapsed_ms:.1f}ms). Please speak for at least 1 second."
-                            })
-                        else:
-                            if audio_buffer:
-                                try:
-                                    audio_data = np.frombuffer(audio_buffer, dtype=np.int16).astype(np.float32) / 32768.0
-                                    client.stream(audio_data)
-                                    log.debug(f"Sent final audio chunk: {len(audio_buffer)} bytes")
-                                except Exception as e:
-                                    log.error(f"Error streaming final audio: {e}")
-                                    await websocket.send_json({"type": "error", "data": f"Final audio streaming error: {str(e)}"})
-                            client.disconnect(terminate=True)
-                            await websocket.send_text("Stopped transcription")
+        while websocket_open:
+            try:
+                msg = await websocket.receive()
+                if msg["type"] == "websocket.disconnect":
+                    log.info("WebSocket disconnected by client")
+                    websocket_open = False
+                    break
+                elif msg["type"] == "websocket.receive":
+                    data = msg.get("bytes") or msg.get("text")
+                    if isinstance(data, str):
+                        if data == "start":
+                            start_time = datetime.now()
+                            await websocket.send_text("Started transcription")
                             if USER_SETTINGS.get("enableSound", True):
-                                await websocket.send_json({"type": "sound_alert", "data": "stop"})
-                    elif data.startswith("text:"):
-                        transcript = data[5:].strip()
-                        if transcript:
-                            await stream_gemini_response(chat_id, transcript, websocket, is_voice_input=False)
-                    elif data.startswith("speak:"):
-                        transcript = data[6:].strip()
-                        if transcript:
-                            murf_ws_url = f"{MURF_WS_URL_DEFAULT}?api_key={get_api_key('murf_api_key', websocket)}&context_id={CONTEXT_ID}&format=WAV&sample_rate=44100&channel_type=MONO"
-                            async with websockets.connect(murf_ws_url, ping_interval=None) as murf_ws:
-                                await murf_ws.send(json.dumps({"init": True}))
-                                voice_config = {"voice_config": {"voiceId": USER_SETTINGS.get("voiceId", "en-IN-alia"), "style": "Narration", "speed": USER_SETTINGS.get("playbackSpeed", 1.0)}}
-                                await murf_ws.send(json.dumps(voice_config))
-                                await murf_ws.send(json.dumps({"text": transcript}))
-                                murf_response = await asyncio.wait_for(murf_ws.recv(), timeout=10.0)
-                                murf_data = json.loads(murf_response)
-                                base64_audio = murf_data.get("audio", "")
-                                is_final = murf_data.get("is_final", False)
-                                if base64_audio:
-                                    await websocket.send_json({
-                                        "type": "speak_audio",
-                                        "data": base64_audio,
-                                        "is_final": is_final
-                                    })
-                                while not is_final:
+                                await websocket.send_json({"type": "sound_alert", "data": "start"})
+                        elif data == "stop":
+                            elapsed_ms = (datetime.now() - start_time).total_seconds() * 1000 if start_time else 0
+                            if elapsed_ms < MIN_AUDIO_DURATION_MS:
+                                log.warning(f"Recording too short: {elapsed_ms:.1f}ms, required: {MIN_AUDIO_DURATION_MS}ms")
+                                await websocket.send_json({
+                                    "type": "error",
+                                    "data": f"Recording too short ({elapsed_ms:.1f}ms). Please speak for at least 1 second."
+                                })
+                            else:
+                                if audio_buffer:
                                     try:
-                                        murf_response = await asyncio.wait_for(murf_ws.recv(), timeout=5.0)
-                                        murf_data = json.loads(murf_response)
-                                        base64_audio = murf_data.get("audio", "")
-                                        is_final = murf_data.get("is_final", False)
-                                        if base64_audio:
-                                            await websocket.send_json({
-                                                "type": "speak_audio",
-                                                "data": base64_audio,
-                                                "is_final": is_final
-                                            })
-                                    except asyncio.TimeoutError:
-                                        break
-                elif isinstance(data, bytes):
-                    audio_buffer.extend(data)
-                    current_time = datetime.now()
-                    elapsed_ms = (current_time - last_send_time).total_seconds() * 1000
-                    if elapsed_ms >= 1000:  # Match client-side AUDIO_BUFFER_INTERVAL
-                        if len(audio_buffer) >= MIN_BUFFER_SIZE:
-                            try:
-                                audio_data = np.frombuffer(audio_buffer, dtype=np.int16).astype(np.float32) / 32768.0
-                                client.stream(audio_data)
-                                log.debug(f"Sent audio chunk: {len(audio_buffer)} bytes, {elapsed_ms:.1f} ms")
-                                audio_buffer = bytearray()
-                                last_send_time = current_time
-                            except Exception as e:
-                                log.error(f"Error streaming audio to AssemblyAI: {e}")
-                                await websocket.send_json({"type": "error", "data": f"Audio streaming error: {str(e)}"})
-                                client.disconnect(terminate=True)
-                                break
-                        else:
-                            log.warning(f"Audio buffer too small: {len(audio_buffer)} bytes, required: {MIN_BUFFER_SIZE} bytes")
-                    # Continue accumulating data until interval is reached
-                else:
-                    log.warning(f"Received invalid data type: {type(data)}")
-                    await websocket.send_json({"type": "error", "data": "Invalid data received"})
+                                        stream_count += 1
+                                        await safe_stream(audio_buffer, stream_count, "final_chunk")
+                                        audio_buffer = bytearray()
+                                    except Exception as e:
+                                        log.error(f"Error streaming final audio: {e}, stream_count: {stream_count}")
+                                        await websocket.send_json({"type": "error", "data": f"Final audio streaming error: {str(e)}"})
+                                log.debug("Disconnecting AssemblyAI RealtimeTranscriber")
+                                await asyncio.sleep(0.5)  # Delay to ensure all chunks are processed
+                                transcriber.close()
+                                log.debug("Disconnected AssemblyAI RealtimeTranscriber")
+                                await websocket.send_text("Stopped transcription")
+                                if USER_SETTINGS.get("enableSound", True):
+                                    await websocket.send_json({"type": "sound_alert", "data": "stop"})
+                        elif data.startswith("text:"):
+                            transcript = data[5:].strip()
+                            if transcript:
+                                await stream_gemini_response(chat_id, transcript, websocket, is_voice_input=False)
+                        elif data.startswith("speak:"):
+                            transcript = data[6:].strip()
+                            if transcript:
+                                murf_ws_url = f"{MURF_WS_URL_DEFAULT}?api_key={get_api_key('murf_api_key', websocket)}&context_id={CONTEXT_ID}&format=WAV&sample_rate=44100&channel_type=MONO"
+                                async with websockets.connect(murf_ws_url, ping_interval=None) as murf_ws:
+                                    await murf_ws.send(json.dumps({"init": True}))
+                                    voice_config = {"voice_config": {"voiceId": USER_SETTINGS.get("voiceId", "en-IN-alia"), "style": "Narration", "speed": USER_SETTINGS.get("playbackSpeed", 1.0)}}
+                                    await murf_ws.send(json.dumps(voice_config))
+                                    await murf_ws.send(json.dumps({"text": transcript}))
+                                    murf_response = await asyncio.wait_for(murf_ws.recv(), timeout=10.0)
+                                    murf_data = json.loads(murf_response)
+                                    base64_audio = murf_data.get("audio", "")
+                                    is_final = murf_data.get("is_final", False)
+                                    if base64_audio:
+                                        await websocket.send_json({
+                                            "type": "speak_audio",
+                                            "data": base64_audio,
+                                            "is_final": is_final
+                                        })
+                                    while not is_final:
+                                        try:
+                                            murf_response = await asyncio.wait_for(murf_ws.recv(), timeout=5.0)
+                                            murf_data = json.loads(murf_response)
+                                            base64_audio = murf_data.get("audio", "")
+                                            is_final = murf_data.get("is_final", False)
+                                            if base64_audio:
+                                                await websocket.send_json({
+                                                    "type": "speak_audio",
+                                                    "data": base64_audio,
+                                                    "is_final": is_final
+                                                })
+                                        except asyncio.TimeoutError:
+                                            break
+                    elif isinstance(data, bytes):
+                        audio_buffer.extend(data)
+                        current_time = datetime.now()
+                        elapsed_ms = (current_time - last_send_time).total_seconds() * 1000
+                        if elapsed_ms >= 1000:  # Match client-side AUDIO_BUFFER_INTERVAL
+                            if len(audio_buffer) >= MIN_BUFFER_SIZE:
+                                try:
+                                    stream_count += 1
+                                    await safe_stream(audio_buffer, stream_count, "streaming_chunk")
+                                    audio_buffer = bytearray()
+                                    last_send_time = current_time
+                                except Exception as e:
+                                    log.error(f"Error streaming audio to AssemblyAI: {e}, stream_count: {stream_count}")
+                                    await websocket.send_json({"type": "error", "data": f"Audio streaming error: {str(e)}"})
+                                    transcriber.close()
+                                    websocket_open = False
+                                    break
+                            else:
+                                log.debug(f"Accumulating audio buffer: {len(audio_buffer)} bytes, required: {MIN_BUFFER_SIZE} bytes")
+                    else:
+                        log.warning(f"Received invalid data type: {type(data)}")
+                        await websocket.send_json({"type": "error", "data": f"Invalid data received: {type(data)}"})
+            except WebSocketException as e:
+                log.error(f"WebSocket exception: {e}")
+                await websocket.send_json({"type": "error", "data": f"WebSocket error: {str(e)}"})
+                websocket_open = False
     except Exception as e:
         log.error(f"WebSocket error: {e}")
-        await websocket.send_json({"type": "error", "data": f"WebSocket error: {str(e)}"})
+        if websocket_open:
+            await websocket.send_json({"type": "error", "data": f"WebSocket error: {str(e)}"})
+        websocket_open = False
     finally:
-        if client:
-            client.disconnect(terminate=True)
-        await websocket.close()
-        log.info("WebSocket closed")
+        if transcriber:
+            log.debug("Disconnecting AssemblyAI RealtimeTranscriber in finally block")
+            try:
+                await asyncio.sleep(0.5)  # Delay to ensure cleanup
+                transcriber.close()
+                log.debug("Disconnected AssemblyAI RealtimeTranscriber in finally block")
+            except Exception as e:
+                log.error(f"Error disconnecting AssemblyAI: {e}")
+        if websocket_open:
+            try:
+                await websocket.close()
+                log.info("WebSocket closed")
+            except Exception as e:
+                log.error(f"Error closing WebSocket: {e}")
+            websocket_open = False
 
 if __name__ == "__main__":
     import uvicorn

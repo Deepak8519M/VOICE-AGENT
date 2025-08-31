@@ -1,17 +1,17 @@
 [
   {
-    "timestamp": "2025-08-31T01:48:35.103240",
+    "timestamp": "2025-08-31T17:02:52.412487",
+    "user_query": "Summarize cloud computing unit 2 and send to email",
+    "ai_response": "I can't directly send emails, but I can definitely help you summarize Cloud Computing Unit 2!  To do that effectively, I need a little more information.  Could you tell me what topics were covered in that unit?  For example, did it cover specific cloud models (like IaaS, PaaS, SaaS), security aspects, deployment models, or something else?  The more detail you give me, the better summary I can create for you.\n"
+  },
+  {
+    "timestamp": "2025-08-31T17:03:20.533616",
+    "user_query": "Summarize cloud computing unit 2 and send to email",
+    "ai_response": "Subject: Cloud Computing Unit 2 Summary\n\nHey there!\n\nHere's a quick summary of Unit 2 on Cloud Computing:  It mainly covers virtual machines (VMs) and how they're used to virtualize clusters and data centers.\n\nThe unit explains that virtualization lets you run multiple VMs on a single physical machine, improving resource sharing and performance.  It achieves this by separating the hardware from the software.\n\nDifferent levels of virtualization are discussed, including: instruction set architecture (ISA) level, hardware level, operating system level, library support level, and application level.  A key component is the hypervisor (or VMM), a software layer that creates the abstraction for the VMs.\n\nThe unit also touches upon virtual clusters, resource management, and how virtualization helps automate data centers.\n\nLet me know if you'd like any more details!\n"
+  },
+  {
+    "timestamp": "2025-08-31T17:11:13.521785",
     "user_query": "hi",
     "ai_response": "Hey there! How can I help you today?\n"
-  },
-  {
-    "timestamp": "2025-08-31T01:51:53.897304",
-    "user_query": "Summarize cloud computin unit 2 and also find trends of jobs in it and send to emai",
-    "ai_response": "Here are the top search results:\n1. Unit 2 (pdf) - CliffsNotes: Unit-2 CloudInfrastructure 1. What is cloud computing? Cloud computing is the on-demand delivery of IT resources over the Internet with... (Source: https://www.cliffsnotes.com/study-notes/23041084)\n2. Unit 2 | PDF | Cloud Computing | Software As A Service - Scribd: The document provides an overview of cloud computing, detailing its definition, types (public, private, hybrid, and community clouds), and the deployment of... (Source: https://www.scribd.com/presentation/878234928/Unit-2)\n3. [PDF] Unit-2 - Cloud Computing Architecture - Naresh Prasad Das: Cloud infrastructure consists of hardware and software components such as data storage, server, virtualization software, etc. It also provides a Graphical User... (Source: http://www.nareshpd.com.np/upload/Cloud_Computing/Cloud_Computing_Unit_2.pdf)\n"
-  },
-  {
-    "timestamp": "2025-08-31T01:52:16.667686",
-    "user_query": "okay thank you",
-    "ai_response": "No problem at all!  What can I help you with today?\n"
   }
 ]
